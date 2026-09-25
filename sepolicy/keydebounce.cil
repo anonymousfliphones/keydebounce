@@ -1,0 +1,22 @@
+; keydebounce: SELinux domain for the XP3800 keypad filter daemon.
+; Appended to /system/etc/selinux/plat_sepolicy.cil. Started by init with
+; "seclabel u:r:keydebounce:s0"; the binary keeps the default system_file label.
+(type keydebounce)
+(roletype r keydebounce)
+(typeattributeset domain (keydebounce))
+(allow init keydebounce (process (transition siginh rlimitinh noatsecure)))
+(allow keydebounce system_file (file (entrypoint read open getattr execute)))
+(allow keydebounce init (fd (use)))
+(allow keydebounce input_device (dir (search open read getattr)))
+(allow keydebounce input_device (chr_file (open read ioctl getattr)))
+(allow keydebounce uhid_device (chr_file (open read write ioctl getattr)))
+(allow keydebounce system_data_file (dir (search)))
+(allow keydebounce shell_data_file (dir (search getattr)))
+(allow keydebounce shell_data_file (file (open read getattr)))
+(allow keydebounce socket_device (dir (search)))
+(allow keydebounce properties_device (dir (search getattr)))
+(allow keydebounce properties_serial (file (open read getattr)))
+(allow keydebounce log_prop (file (open read getattr)))
+(allow keydebounce logdw_socket (sock_file (write)))
+(allow keydebounce logd (unix_dgram_socket (sendto)))
+(allow keydebounce self (unix_dgram_socket (create connect write getopt setopt)))

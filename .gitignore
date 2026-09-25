@@ -1,0 +1,17 @@
+# Build output (rebuild with the command in CLAUDE.md)
+/keydebounce
+*.o
+
+# Phone log captures and test output
+*.log
+su-test-output.txt
+
+# Stock policy pulled from this specific phone: device-specific firmware, keep locally only
+policy-backup/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
