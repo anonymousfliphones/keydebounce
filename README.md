@@ -2,6 +2,13 @@
 
 Fixes double key presses on the **Sonim XP3800** keypad (Android 8.1).
 
+> [!CAUTION]
+> **Use at your own risk.** This project changes low-level parts of the phone. The permanent install rewrites the SELinux security policy in `/system` and adds a system-level boot service. Root mode runs a daemon as root that takes over the keypad input device.
+>
+> A mistake or an unexpected firmware difference can leave the phone unable to boot. Recovering may need an EDL flash of a system backup you made beforehand. Getting root, which this requires, can itself crash the phone or cause reboot loops. It may also void your warranty and weaken the phone's security.
+>
+> **The developers take no responsibility** for damaged or unbootable phones, lost data, or anything else that results from using this project. It is provided "as is", without warranty of any kind. See [LICENSE](LICENSE), sections 15 and 16. Don't use it unless you have a full backup and understand how to recover.
+
 ## The problem
 
 On every XP3800, typing quickly produces doubled digits and letters in every app. Two separate causes were confirmed on the device:
@@ -139,3 +146,11 @@ sh /data/local/tmp/harness.sh /data/local/tmp/inject_56_overlap.sh 3
 
 - The mouse service (MATVT) crashed twice while the daemon ran alongside automated screenshots. It didn't happen in normal use.
 - Root exploit crashes with the policy installed (see the warning above).
+
+## License
+
+Copyright (C) 2026 the keydebounce contributors.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for the full text.
