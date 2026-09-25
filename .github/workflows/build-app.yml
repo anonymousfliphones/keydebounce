@@ -1,0 +1,55 @@
+# Builds the KeyDebounce app (with the daemon compiled from keydebounce.c inside it)
+# and uploads it as a downloadable artifact on the run's summary page.
+name: Build app
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # The daemon is built with the same NDK as the manual build in CLAUDE.md.
+      - name: Install NDK 27.0.12077973
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.0.12077973" > /dev/null
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Check the daemon inside the APK
+        run: |
+          unzip -o app/build/outputs/apk/debug/keydebounce-debug.apk 'assets/kd/*' -d apk
+          ls -la apk/assets/kd
+          file apk/assets/kd/keydebounce
+          file apk/assets/kd/keydebounce | grep -q 'ELF 32-bit LSB .*ARM'
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: keydebounce-apk
+          path: app/build/outputs/apk/debug/keydebounce-debug.apk
+          if-no-files-found: error
+
+      # The same daemon binary and install scripts, for installing by hand with adb.
+      - name: Upload daemon
+        uses: actions/upload-artifact@v4
+        with:
+          name: keydebounce-daemon
+          path: apk/assets/kd/
+          if-no-files-found: error

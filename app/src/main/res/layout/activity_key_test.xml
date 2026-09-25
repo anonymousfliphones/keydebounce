@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<io.github.anonymousfliphones.keydebounce.KeyWatchLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    style="@style/Screen">
+
+    <TextView
+        style="@style/Headline"
+        android:text="@string/tester_title" />
+
+    <TextView
+        style="@style/Small"
+        android:text="@string/tester_help" />
+
+    <!-- The only focusable view, so every key reaches it and the watcher. -->
+    <EditText
+        android:id="@+id/typed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/tester_hint"
+        android:importantForAutofill="no"
+        android:inputType="phone"
+        android:singleLine="true"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/summary"
+        style="@style/Body" />
+
+    <!-- Newest first; older lines fall off the bottom. -->
+    <TextView
+        android:id="@+id/events"
+        style="@style/Mono"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</io.github.anonymousfliphones.keydebounce.KeyWatchLayout>

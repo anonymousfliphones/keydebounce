@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A keypad key with a check mark. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M40,34 L68,34 Q74,34 74,40 L74,68 Q74,74 68,74 L40,74 Q34,74 34,68 L34,40 Q34,34 40,34 Z"
+        android:strokeWidth="5"
+        android:strokeColor="#FFFFFF" />
+    <path
+        android:pathData="M44,55 L51,62 L65,46"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="6"
+        android:strokeColor="#FFFFFF" />
+</vector>
