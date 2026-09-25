@@ -33,6 +33,17 @@ If the daemon stops for any reason, the keypad goes straight back to working nor
 
 **Tradeoff:** you can't hold two keys at once. Holding a single key (long press) still works.
 
+### Why not an accessibility service or a different keyboard?
+
+Both would work without root, and both were considered:
+
+- **A different keyboard (IME):** tested with TT9 in place of Sonim's keyboard, and the extra digit still appeared. The copy is added below the keyboard app, so replacing the keyboard doesn't help.
+- **An accessibility service:** with key filtering on, it sees each key before the app, but it can only let a key through or swallow it. It can't create a key event, because that needs `INJECT_EVENTS`, a permission only system apps get. It also can't hold a key back: it has to answer right away, and Android passes the key on after about 500 ms anyway.
+
+  The overlap fix depends on exactly what it can't do: sending a "key released" event for the held key *before* the next key goes down. Its only options are swallowing the new key (the digit is lost) or swallowing the old key's release (apps think the key is still held, and the dialer's tone can keep playing). It could remove bounce ghosts, but not the "566" doubling, which is the main problem.
+
+Fixing the overlap needs something that owns the keypad device and can create the replacement keypad through `/dev/uinput`. That takes root, or the SELinux rule the permanent install adds.
+
 ## The app
 
 KeyDebounce is an Android app that installs, removes and checks the fix on the phone. Every screen works with the keypad; no touchscreen needed.
