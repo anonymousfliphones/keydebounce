@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="accent">#1565C0</color>
+    <color name="accent_dark">#0D47A1</color>
+    <color name="background">#FFFFFF</color>
+    <color name="button">#E3E7EC</color>
+    <color name="text">#202124</color>
+    <color name="text_secondary">#5F6368</color>
+    <color name="good">#2E7D32</color>
+    <color name="warn">#E65100</color>
+    <color name="bad">#C62828</color>
+    <color name="neutral">#5F6368</color>
+</resources>

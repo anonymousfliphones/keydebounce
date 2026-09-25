@@ -16,12 +16,19 @@ Findings doc: https://claude.ai/code/artifact/d743b08c-8f0c-4289-8a52-9ad630f0f1
 | `sepolicy/` | Permanent install: SELinux rule (`keydebounce.cil`), init service (`keydebounce.rc`), `dryrun.sh`, `install.sh`, `uninstall.sh` |
 | `policy-backup/` | Stock `plat_sepolicy.cil` + its `.sha256` pulled from the phone before install. Needed to uninstall. Never delete. |
 | `test/` | `harness.sh` + `inject_56*.sh`: automated repro via `sendevent`, reads the dialer field back with `uiautomator` |
+| `app/` | Android app (Java, no AndroidX): status, Install/Undo/Off-On via root, key tester, correction log. Package `io.github.anonymousfliphones.keydebounce`, minSdk 26. |
+| `app/src/main/assets/kd/kd.sh` | Root helper the app runs via `su`. Wraps `sepolicy/*.sh`: stages to `/data/local/tmp/kd_dry`, backs up stock policy (also `/sdcard/keydebounce-backup`), dry-runs, refuses unless the policy is stock and the baseline compile matches `/vendor/etc/selinux/precompiled_sepolicy`. |
+| `.github/workflows/build-app.yml` | CI: builds the APK and uploads `keydebounce-apk` + `keydebounce-daemon` artifacts |
 
 ## Build
 
 ```
 "C:/Users/adsch/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/armv7a-linux-androideabi21-clang.cmd" -O2 -Wall -Wextra -o keydebounce keydebounce.c -llog
 ```
+
+App: `./gradlew assembleDebug` (AGP 8.7.3, Gradle 8.9 wrapper, JDK 17+). The `buildDaemon<Variant>` task in `app/build.gradle.kts` runs the same clang command from the pinned NDK and bundles the binary with `sepolicy/*` as `assets/kd/`. CI is the reference build; the cloud dev container can't reach dl.google.com.
+
+The app must never run `su` on its own (startup, boot, status checks): root requests with the policy installed crash the phone. Status is read without root (`/system` files, `init.svc.keydebounce`, count of `soc:matrix_keypad@0` input devices).
 
 ## Device facts that matter
 
