@@ -8,6 +8,8 @@
 #   install    back up the stock policy, dry run, then sepolicy/install.sh
 #   uninstall  find a stock policy backup that verifies, then sepolicy/uninstall.sh
 #   off | on   create/remove the kill switch and stop/start the daemon now
+#   rootstart  run the daemon from root without installing anything (until restart)
+#   rootstop   stop the daemon started by rootstart
 #   reboot
 #
 # Every check runs before the step it guards; a failed check stops the command.
@@ -21,6 +23,7 @@ MAP=$S/mapping/27.0.cil
 VHASH=/vendor/etc/selinux/precompiled_sepolicy.plat_and_mapping.sha256
 VPOLICY=/vendor/etc/selinux/precompiled_sepolicy
 KILL=/data/local/tmp/keydebounce.off
+RUN=$W/run/keydebounce
 FILES="keydebounce keydebounce.cil keydebounce.rc dryrun.sh install.sh uninstall.sh"
 
 fail() { echo "STOPPED: $*"; exit 1; }
@@ -28,7 +31,8 @@ fail() { echo "STOPPED: $*"; exit 1; }
 first() { head -n 1 "$1" 2>/dev/null | cut -d' ' -f1; }
 hash_with_mapping() { cat "$1" $MAP | sha256sum | cut -d' ' -f1; }
 policy_installed() { grep -q keydebounce $S/plat_sepolicy.cil; }
-daemon_running() { pgrep -f /system/bin/keydebounce >/dev/null; }
+daemon_running() { pgrep -f '^/system/bin/keydebounce' >/dev/null; }
+root_running() { pgrep -f "^$RUN" >/dev/null; }
 
 # Stock plat_sepolicy.cil: no keydebounce, and together with the mapping it
 # hashes to what the vendor's precompiled policy was built from.
@@ -174,12 +178,59 @@ turn_on() {
   echo "on"
 }
 
+# Root mode: nothing in /system or the policy changes, so SELinux has to let
+# su use /dev/input and /dev/uinput (Magisk does). Runs from its own copy so
+# staging for an install never overwrites a running binary.
+root_start() {
+  [ "$(id -u)" = 0 ] || fail "not running as root"
+  policy_installed && fail "the fix is installed, so it already starts at boot. Use Turn off / on instead."
+  if root_running; then
+    echo "already running"
+    echo "on"
+    return 0
+  fi
+  [ -f "$SRC/keydebounce" ] || fail "app file missing: keydebounce"
+  mkdir -p $W/run &&
+    cp "$SRC/keydebounce" $RUN.new && cmp -s "$SRC/keydebounce" $RUN.new &&
+    chmod 755 $RUN.new && mv -f $RUN.new $RUN || fail "couldn't copy the daemon to $W/run"
+  chown shell:shell $W 2>/dev/null
+  if [ -e $KILL ]; then
+    rm -f $KILL && echo "off switch file removed (it only applies to the installed fix)"
+  fi
+  # New session, so it outlives this su shell.
+  if command -v setsid >/dev/null 2>&1; then
+    setsid $RUN </dev/null >/dev/null 2>&1 &
+  else
+    nohup $RUN </dev/null >/dev/null 2>&1 &
+  fi
+  sleep 2
+  echo "log:"
+  logcat -d -s keydebounce 2>/dev/null | tail -n 4
+  root_running ||
+    fail "the daemon exited right away. The log above says why; this root may not allow /dev/input or /dev/uinput."
+  echo "on"
+}
+
+root_stop() {
+  if ! root_running; then
+    echo "wasn't running"
+    echo "off"
+    return 0
+  fi
+  pkill -f "^$RUN"
+  sleep 1
+  root_running && fail "it's still running"
+  echo "off"
+}
+
 case "$CMD" in
   dryrun) preflight; stage; dryrun ;;
   install) install_fix ;;
   uninstall) uninstall_fix ;;
   off) turn_off ;;
   on) turn_on ;;
+  rootstart) root_start ;;
+  rootstop) root_stop ;;
   reboot) sync; reboot ;;
   *) fail "unknown command: $CMD" ;;
 esac

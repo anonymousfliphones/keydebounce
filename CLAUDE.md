@@ -17,7 +17,7 @@ Findings doc: https://claude.ai/code/artifact/d743b08c-8f0c-4289-8a52-9ad630f0f1
 | `policy-backup/` | Stock `plat_sepolicy.cil` + its `.sha256` pulled from the phone before install. Needed to uninstall. Never delete. |
 | `test/` | `harness.sh` + `inject_56*.sh`: automated repro via `sendevent`, reads the dialer field back with `uiautomator` |
 | `app/` | Android app (Java, no AndroidX): status, Install/Undo/Off-On via root, key tester, correction log. Package `io.github.anonymousfliphones.keydebounce`, minSdk 26. |
-| `app/src/main/assets/kd/kd.sh` | Root helper the app runs via `su`. Wraps `sepolicy/*.sh`: stages to `/data/local/tmp/kd_dry`, backs up stock policy (also `/sdcard/keydebounce-backup`), dry-runs, refuses unless the policy is stock and the baseline compile matches `/vendor/etc/selinux/precompiled_sepolicy`. |
+| `app/src/main/assets/kd/kd.sh` | Root helper the app runs via `su`. Wraps `sepolicy/*.sh`: stages to `/data/local/tmp/kd_dry`, backs up stock policy (also `/sdcard/keydebounce-backup`), dry-runs, refuses unless the policy is stock and the baseline compile matches `/vendor/etc/selinux/precompiled_sepolicy`. `rootstart`/`rootstop` = root mode: runs the daemon from `/data/local/tmp/kd_dry/run/` via `setsid`, no install. |
 | `.github/workflows/build-app.yml` | CI: builds the APK and uploads `keydebounce-apk` + `keydebounce-daemon` artifacts |
 
 ## Build
@@ -28,7 +28,7 @@ Findings doc: https://claude.ai/code/artifact/d743b08c-8f0c-4289-8a52-9ad630f0f1
 
 App: `./gradlew assembleDebug` (AGP 8.7.3, Gradle 8.9 wrapper, JDK 17+). The `buildDaemon<Variant>` task in `app/build.gradle.kts` runs the same clang command from the pinned NDK and bundles the binary with `sepolicy/*` as `assets/kd/`. CI is the reference build; the cloud dev container can't reach dl.google.com.
 
-The app must never run `su` on its own (startup, boot, status checks): root requests with the policy installed crash the phone. Status is read without root (`/system` files, `init.svc.keydebounce`, count of `soc:matrix_keypad@0` input devices).
+The app must never run `su` on its own (startup, status checks): root requests with the policy installed crash the phone. The one exception is root mode's opt-in Start at boot (`BootReceiver`), which must skip `su` whenever `plat_sepolicy.cil` contains keydebounce. Status is read without root (`/system` files, `init.svc.keydebounce`, count of `soc:matrix_keypad@0` input devices).
 
 ## Device facts that matter
 

@@ -29,6 +29,8 @@ public class RootActivity extends Activity {
     static final String UNINSTALL = "uninstall";
     static final String OFF = "off";
     static final String ON = "on";
+    static final String ROOT_START = "rootstart";
+    static final String ROOT_STOP = "rootstop";
     static final String REBOOT = "reboot";
 
     private final Handler ui = new Handler(Looper.getMainLooper());
@@ -55,7 +57,7 @@ public class RootActivity extends Activity {
         close.setOnClickListener(v -> finish());
 
         command = getIntent().getStringExtra(EXTRA_COMMAND);
-        if (!Arrays.asList(DRYRUN, INSTALL, UNINSTALL, OFF, ON, REBOOT).contains(command)) {
+        if (!Arrays.asList(DRYRUN, INSTALL, UNINSTALL, OFF, ON, ROOT_START, ROOT_STOP, REBOOT).contains(command)) {
             finish();
             return;
         }
@@ -156,6 +158,8 @@ public class RootActivity extends Activity {
         if (UNINSTALL.equals(command)) return R.string.run_uninstall;
         if (OFF.equals(command)) return R.string.run_off;
         if (ON.equals(command)) return R.string.run_on;
+        if (ROOT_START.equals(command)) return R.string.run_root_start;
+        if (ROOT_STOP.equals(command)) return R.string.run_root_stop;
         if (REBOOT.equals(command)) return R.string.run_reboot;
         return R.string.run_dryrun;
     }
@@ -165,6 +169,8 @@ public class RootActivity extends Activity {
         if (UNINSTALL.equals(command)) return R.string.done_uninstall;
         if (OFF.equals(command)) return R.string.done_off;
         if (ON.equals(command)) return R.string.done_on;
+        if (ROOT_START.equals(command)) return R.string.done_root_start;
+        if (ROOT_STOP.equals(command)) return R.string.done_root_stop;
         if (REBOOT.equals(command)) return R.string.run_reboot;
         return R.string.done_dryrun;
     }

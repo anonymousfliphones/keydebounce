@@ -5,11 +5,13 @@ plugins {
     id("com.android.application")
 }
 
+// Same NDK the daemon has always been built with (see CLAUDE.md).
+val daemonNdk = "27.0.12077973"
+
 android {
     namespace = "io.github.anonymousfliphones.keydebounce"
     compileSdk = 35
-    // Same NDK the daemon has always been built with (see CLAUDE.md).
-    ndkVersion = "27.0.12077973"
+    ndkVersion = daemonNdk
 
     defaultConfig {
         applicationId = "io.github.anonymousfliphones.keydebounce"
@@ -60,7 +62,7 @@ abstract class BuildDaemon : DefaultTask() {
 
         val compiler = File(clang.get())
         if (!compiler.exists()) {
-            throw GradleException("NDK compiler not found: $compiler\nInstall NDK 27.0.12077973 with the SDK manager.")
+            throw GradleException("NDK compiler not found: $compiler\nInstall that NDK version with the SDK manager.")
         }
         execOps.exec {
             commandLine(
@@ -82,7 +84,9 @@ val clangPath = "toolchains/llvm/prebuilt/$ndkHost/bin/armv7a-linux-androideabi2
     if (osName.startsWith("Windows")) ".cmd" else ""
 
 androidComponents {
-    val ndkDir = sdkComponents.ndkDirectory
+    // sdkComponents.ndkDirectory has no value without a CMake/ndk-build setup,
+    // so find the side-by-side NDK in the SDK directly.
+    val ndkDir = sdkComponents.sdkDirectory.map { it.dir("ndk/$daemonNdk") }
     onVariants { variant ->
         val task = tasks.register<BuildDaemon>("buildDaemon${variant.name.replaceFirstChar { it.uppercase() }}") {
             source.set(rootProject.layout.projectDirectory.file("keydebounce.c"))
