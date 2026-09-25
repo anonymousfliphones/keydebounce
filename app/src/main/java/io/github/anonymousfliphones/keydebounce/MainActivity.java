@@ -99,12 +99,17 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
 
         String service = s.service.isEmpty() ? getString(R.string.unknown) : s.service;
         String text = getString(R.string.details,
-                yesNo(s.binaryInstalled && s.rcInstalled), yesNo(s.policyInstalled), service,
+                yesNo(s.binaryInstalled && s.rcInstalled), policyText(s.policy), service,
                 getString(s.filtering() ? R.string.active : R.string.not_active),
                 getString(s.suFound ? R.string.found : R.string.not_found));
         if (s.installed() && !s.filtering()) text += "\n\n" + getString(R.string.state_off_hint);
         if (!s.installed() && BootReceiver.startAtBoot(this)) text += "\n" + getString(R.string.start_at_boot_on);
         details.setText(text);
+    }
+
+    private String policyText(int policy) {
+        if (policy == PhoneStatus.POLICY_UNKNOWN) return getString(R.string.cant_check);
+        return yesNo(policy == PhoneStatus.POLICY_YES);
     }
 
     private String yesNo(boolean b) {
@@ -117,7 +122,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         if (!s.supported) {
             message(R.string.unsupported_title, getString(R.string.unsupported_msg, Build.VERSION.RELEASE,
                     getString(s.keypads > 0 ? R.string.found : R.string.not_found)));
-        } else if (s.policyInstalled) {
+        } else if (s.policy == PhoneStatus.POLICY_YES || s.installed()) {
             message(R.string.install_title, getString(R.string.already_installed));
         } else if (!s.suFound) {
             message(R.string.need_root_title, getString(R.string.need_root_install));
@@ -173,7 +178,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         if (!s.supported) {
             message(R.string.unsupported_title, getString(R.string.unsupported_msg, Build.VERSION.RELEASE,
                     getString(s.keypads > 0 ? R.string.found : R.string.not_found)));
-        } else if (s.policyInstalled) {
+        } else if (s.anyTrace()) {
             message(R.string.root_mode_title, getString(R.string.root_mode_installed));
         } else if (!s.suFound) {
             message(R.string.need_root_title, getString(R.string.need_root_mode));
