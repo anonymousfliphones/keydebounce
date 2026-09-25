@@ -39,7 +39,7 @@ public class BootReceiver extends BroadcastReceiver {
         new Thread(() -> {
             StringBuilder out = new StringBuilder();
             try {
-                if (PhoneStatus.policyHasKeydebounce()) {
+                if (PhoneStatus.installTraceOnPhone()) {
                     out.append("Skipped: the fix is installed, and root requests with it installed crash the phone.\n");
                 } else {
                     File dir = RootShell.unpack(app);
