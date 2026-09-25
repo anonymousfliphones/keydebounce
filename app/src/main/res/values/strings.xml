@@ -16,6 +16,7 @@
     <string name="yes">yes</string>
     <string name="no">no</string>
     <string name="unknown">unknown</string>
+    <string name="cant_check">can\'t check</string>
     <string name="active">active</string>
     <string name="not_active">not active</string>
     <string name="found">found</string>

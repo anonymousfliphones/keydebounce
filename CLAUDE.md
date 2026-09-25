@@ -28,7 +28,7 @@ Findings doc: https://claude.ai/code/artifact/d743b08c-8f0c-4289-8a52-9ad630f0f1
 
 App: `./gradlew assembleDebug` (AGP 8.7.3, Gradle 8.9 wrapper, JDK 17+). The `buildDaemon<Variant>` task in `app/build.gradle.kts` runs the same clang command from the pinned NDK and bundles the binary with `sepolicy/*` as `assets/kd/`. CI is the reference build; the cloud dev container can't reach dl.google.com.
 
-The app must never run `su` on its own (startup, status checks): root requests with the policy installed crash the phone. The one exception is root mode's opt-in Start at boot (`BootReceiver`), which must skip `su` whenever `plat_sepolicy.cil` contains keydebounce. Status is read without root (`/system` files, `init.svc.keydebounce`, count of `soc:matrix_keypad@0` input devices).
+The app must never run `su` on its own (startup, status checks): root requests with the policy installed crash the phone. The one exception is root mode's opt-in Start at boot (`BootReceiver`), which must skip `su` on any trace of the install (`/system/bin/keydebounce`, the `.rc`, or keydebounce in `plat_sepolicy.cil`). Apps may not be allowed to read the policy file, so unreadable counts as unknown, never as "not installed". Status is read without root (`/system` files, `init.svc.keydebounce`, count of `soc:matrix_keypad@0` input devices).
 
 ## Device facts that matter
 
