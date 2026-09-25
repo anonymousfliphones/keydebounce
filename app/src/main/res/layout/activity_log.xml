@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Screen">
+
+    <TextView
+        style="@style/Headline"
+        android:text="@string/log_title" />
+
+    <TextView
+        android:id="@+id/summary"
+        style="@style/Body" />
+
+    <Button
+        android:id="@+id/refresh"
+        style="@style/Action"
+        android:text="@string/refresh" />
+
+    <!-- Focusable, so the D-pad scrolls it. Newest lines first. -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/lines"
+            style="@style/Mono"
+            android:textSize="11sp" />
+    </ScrollView>
+</LinearLayout>
