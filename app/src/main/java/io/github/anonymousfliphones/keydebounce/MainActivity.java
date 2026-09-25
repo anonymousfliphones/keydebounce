@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /** Status of the fix, plus install, undo, off/on, key tester and log. */
 public class MainActivity extends Activity implements InputManager.InputDeviceListener {
@@ -28,6 +29,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         findViewById(R.id.install).setOnClickListener(v -> onInstall());
         findViewById(R.id.undo).setOnClickListener(v -> onUndo());
         findViewById(R.id.toggle).setOnClickListener(v -> onToggle());
+        findViewById(R.id.root_mode).setOnClickListener(v -> onRootMode());
         findViewById(R.id.tester).setOnClickListener(v -> startActivity(new Intent(this, KeyTestActivity.class)));
         findViewById(R.id.log).setOnClickListener(v -> startActivity(new Intent(this, LogActivity.class)));
         findViewById(R.id.install).requestFocus();
@@ -86,8 +88,8 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
             headline = R.string.state_partial;
             color = R.color.warn;
         } else if (s.filtering()) {
-            headline = R.string.state_test;
-            color = R.color.warn;
+            headline = R.string.state_root_mode;
+            color = R.color.good;
         } else {
             headline = R.string.state_none;
             color = R.color.neutral;
@@ -101,6 +103,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
                 getString(s.filtering() ? R.string.active : R.string.not_active),
                 getString(s.suFound ? R.string.found : R.string.not_found));
         if (s.installed() && !s.filtering()) text += "\n\n" + getString(R.string.state_off_hint);
+        if (!s.installed() && BootReceiver.startAtBoot(this)) text += "\n" + getString(R.string.start_at_boot_on);
         details.setText(text);
     }
 
@@ -150,7 +153,9 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         PhoneStatus s = status;
         if (s == null) return;
         AlertDialog.Builder b = new AlertDialog.Builder(this).setTitle(R.string.toggle_title);
-        if (s.suFound && s.installed()) {
+        if (!s.installed()) {
+            b.setMessage(R.string.toggle_not_installed).setPositiveButton(R.string.close, null);
+        } else if (s.suFound) {
             b.setMessage(getString(R.string.toggle_msg) + "\n\n" + getString(R.string.toggle_root_note))
                     .setPositiveButton(R.string.off_now, (d, w) -> run(RootActivity.OFF))
                     .setNeutralButton(R.string.on_now, (d, w) -> run(RootActivity.ON))
@@ -159,6 +164,35 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
             b.setMessage(R.string.toggle_msg).setPositiveButton(R.string.close, null);
         }
         b.show();
+    }
+
+    /** Root mode: run the daemon through su without installing anything. */
+    private void onRootMode() {
+        PhoneStatus s = status;
+        if (s == null) return;
+        if (!s.supported) {
+            message(R.string.unsupported_title, getString(R.string.unsupported_msg, Build.VERSION.RELEASE,
+                    getString(s.keypads > 0 ? R.string.found : R.string.not_found)));
+        } else if (s.policyInstalled) {
+            message(R.string.root_mode_title, getString(R.string.root_mode_installed));
+        } else if (!s.suFound) {
+            message(R.string.need_root_title, getString(R.string.need_root_mode));
+        } else {
+            boolean atBoot = BootReceiver.startAtBoot(this);
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.root_mode_title)
+                    .setMessage(getString(R.string.root_mode_msg,
+                            getString(atBoot ? R.string.on_word : R.string.off_word)))
+                    .setPositiveButton(R.string.start_now, (d, w) -> run(RootActivity.ROOT_START))
+                    .setNeutralButton(R.string.stop, (d, w) -> run(RootActivity.ROOT_STOP))
+                    .setNegativeButton(atBoot ? R.string.boot_turn_off : R.string.boot_turn_on, (d, w) -> {
+                        BootReceiver.setStartAtBoot(this, !atBoot);
+                        Toast.makeText(this, atBoot ? R.string.boot_now_off : R.string.boot_now_on,
+                                Toast.LENGTH_LONG).show();
+                        refresh();
+                    })
+                    .show();
+        }
     }
 
     private void run(String command) {

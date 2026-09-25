@@ -2,6 +2,13 @@
 
 Fixes double key presses on the **Sonim XP3800** keypad (Android 8.1).
 
+> [!CAUTION]
+> **Use at your own risk.** This project changes low-level parts of the phone. The permanent install rewrites the SELinux security policy in `/system` and adds a system-level boot service. Root mode runs a daemon as root that takes over the keypad input device.
+>
+> A mistake or an unexpected firmware difference can leave the phone unable to boot. Recovering may need an EDL flash of a system backup you made beforehand. Getting root, which this requires, can itself crash the phone or cause reboot loops. It may also void your warranty and weaken the phone's security.
+>
+> **The developers take no responsibility** for damaged or unbootable phones, lost data, or anything else that results from using this project. It is provided "as is", without warranty of any kind. See [LICENSE](LICENSE), sections 15 and 16. Don't use it unless you have a full backup and understand how to recover.
+
 ## The problem
 
 On every XP3800, typing quickly produces doubled digits and letters in every app. Two separate causes were confirmed on the device:
@@ -35,12 +42,13 @@ KeyDebounce is an Android app that installs, removes and checks the fix on the p
 | Install fix | Backs up the stock policy, dry-runs the policy compile, then installs. **Dry run only** checks without changing anything. | Yes, for the install only |
 | Undo (remove fix) | Restores the stock policy from the backup and removes the daemon | Yes |
 | Turn off / on | Shows the adb commands for the off switch. With root it can switch now, without a restart. | Only for "now" |
+| Run with root (no install) | Starts the daemon through `su`, like Shizuku starts its server. Nothing in `/system` or the policy changes, and it stops at restart unless **Start at boot** is on. | Yes, every start |
 | Key tester | Lists every key press and release with timing, and flags overlaps, fast repeats (bounce) and double presses | No |
 | Correction log | Counts the overlap and bounce corrections from logcat | No, but needs a one-time adb grant |
 
 The main screen shows whether the fix is on. When it's running, Android lists two `soc:matrix_keypad@0` keypads: the real one and the daemon's replacement.
 
-The app asks for root only when you pick Install, Undo or an "(root)" button. It never asks at startup or boot (see the warning below).
+The app asks for root only when you pick Install, Undo, root mode or an "(root)" button, or at boot if you turned on root mode's **Start at boot**. Start at boot is off by default and is always skipped when the permanent install is present (see the warning below).
 
 ### Get the app
 
@@ -60,6 +68,12 @@ The same run also has a `keydebounce-daemon` artifact: the daemon binary and `se
 4. Copy `/sdcard/keydebounce-backup` to your computer. Undo needs it.
 5. Remove root, or disable apps that ask for root at startup (see the warning below).
 6. Restart the phone. The main screen should say **Fix is ON**.
+
+### Root mode (no install)
+
+If the phone is rooted with root that lets `su` use `/dev/input` and `/dev/uinput` (Magisk does), **Run with root (no install)** → **Start now** runs the filter with no changes to `/system` or the SELinux policy. **Stop** ends it, and a restart ends it too. To start it after every restart, turn on **Start at boot**. The app then asks for root once the phone has booted. That boot attempt's output is saved as `boot-start.log`, next to the other logs listed below.
+
+If the root doesn't allow the keypad or `/dev/uinput`, the daemon exits right away and the app shows its log line. In that case use the permanent install. Starting the daemon over ADB (like Shizuku without root) can't work: the `adb shell` user can't open `/dev/uinput`.
 
 Every root command's output is saved to `/sdcard/Android/data/io.github.anonymousfliphones.keydebounce/files/<command>.log`.
 
@@ -132,3 +146,11 @@ sh /data/local/tmp/harness.sh /data/local/tmp/inject_56_overlap.sh 3
 
 - The mouse service (MATVT) crashed twice while the daemon ran alongside automated screenshots. It didn't happen in normal use.
 - Root exploit crashes with the policy installed (see the warning above).
+
+## License
+
+Copyright (C) 2026 the keydebounce contributors.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for the full text.
