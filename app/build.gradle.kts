@@ -82,14 +82,18 @@ val ndkHost = when {
 val clangPath = "toolchains/llvm/prebuilt/$ndkHost/bin/armv7a-linux-androideabi21-clang" +
     if (osName.startsWith("Windows")) ".cmd" else ""
 
-androidComponents {
-    val ndkDir = sdkComponents.ndkDirectory
-    onVariants { variant ->
-        val task = tasks.register<BuildDaemon>("buildDaemon${variant.name.replaceFirstChar { it.uppercase() }}") {
-            source.set(rootProject.layout.projectDirectory.file("keydebounce.c"))
-            bundled.from(rootProject.layout.projectDirectory.dir("sepolicy").asFileTree)
-            clang.set(ndkDir.map { it.file(clangPath).asFile.absolutePath })
-        }
-        variant.sources.assets?.addGeneratedSourceDirectory(task, BuildDaemon::outputDir)
-    }
+val daemonAssets: File = layout.buildDirectory.dir("generated/kd-assets").get().asFile
+
+val buildDaemon = tasks.register<BuildDaemon>("buildDaemon") {
+    source.set(rootProject.layout.projectDirectory.file("keydebounce.c"))
+    bundled.from(rootProject.layout.projectDirectory.dir("sepolicy").asFileTree)
+    clang.set(androidComponents.sdkComponents.ndkDirectory.map { it.file(clangPath).asFile.absolutePath })
+    outputDir.set(daemonAssets)
+}
+
+android.sourceSets.getByName("main").assets.srcDir(daemonAssets)
+
+// Every variant's asset merge runs after preBuild.
+tasks.named("preBuild") {
+    dependsOn(buildDaemon)
 }
