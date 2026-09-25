@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KeyDebounce</string>
+
+    <!-- Main screen -->
+    <string name="checking">Checking…</string>
+    <string name="state_on">Fix is ON</string>
+    <string name="state_off">Installed, but OFF</string>
+    <string name="state_off_hint">Either the off switch is on or the fix hasn\'t started yet. The correction log shows which.</string>
+    <string name="state_partial">Partly installed</string>
+    <string name="state_test">Filter running (test mode)</string>
+    <string name="state_none">Fix not installed</string>
+    <string name="state_unsupported">XP3800 keypad not found</string>
+    <string name="details">Daemon: %1$s · Policy: %2$s\nService: %3$s\nKeypad filter: %4$s\nRoot: %5$s</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="unknown">unknown</string>
+    <string name="active">active</string>
+    <string name="not_active">not active</string>
+    <string name="found">found</string>
+    <string name="not_found">not found</string>
+
+    <string name="install_fix">Install fix</string>
+    <string name="undo_fix">Undo (remove fix)</string>
+    <string name="toggle">Turn off / on</string>
+
+    <!-- Dialogs -->
+    <string name="install">Install</string>
+    <string name="dry_run_only">Dry run only</string>
+    <string name="undo">Undo</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="off_now">Off now (root)</string>
+    <string name="on_now">On now (root)</string>
+
+    <string name="unsupported_title">Not supported</string>
+    <string name="unsupported_msg">The installer only works on the Sonim XP3800 with Android 8.1.\n\nThis phone: Android %1$s, XP3800 keypad %2$s.</string>
+
+    <string name="need_root_title">Root needed</string>
+    <string name="need_root_install">Installing needs root, but only for the install. The fix runs without root afterwards.\n\nGet root first (for example with Root Manager), then come back. Or install from a computer: see the README on GitHub.</string>
+    <string name="need_root_undo">Undo needs root. Without root you can still turn the fix off (Turn off / on), or flash your system backup over EDL.</string>
+
+    <string name="install_title">Install the fix?</string>
+    <string name="already_installed">The fix is already installed. To reinstall, use Undo, restart the phone, then install again.</string>
+    <string name="install_msg">Before you start, have a backup of the system partition and an EDL flashing setup, in case the phone won\'t boot.\n\nThe app will:\n• Back up the stock policy to /data/local/tmp/kd_dry/stock and /sdcard/keydebounce-backup. Copy it to your computer: Undo needs it.\n• Compile the new policy the way the phone does at boot, and stop without changing anything if that fails.\n• Install the daemon and the policy.\n\nAfterwards, before you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher). With the fix installed, getting root crashed the phone on almost every attempt.</string>
+
+    <string name="undo_title">Remove the fix?</string>
+    <string name="nothing_to_undo">The fix isn\'t installed, so there\'s nothing to undo.</string>
+    <string name="undo_msg">This restores the stock policy from the backup made when the fix was installed (or from policy-backup/ copied to /data/local/tmp/kd_dry/stock), removes the daemon, and then asks you to restart.\n\nWarning: with the fix installed, getting root crashed the phone on almost every attempt during testing. If the phone restarts, try again. If it keeps failing, flash your system backup over EDL.</string>
+
+    <string name="toggle_title">Turn the fix off or on</string>
+    <string name="toggle_msg">From a computer (no root needed):\n\nOff:\nadb shell touch /data/local/tmp/keydebounce.off\nadb reboot\n\nOn:\nadb shell rm /data/local/tmp/keydebounce.off\nadb reboot\n\nWhen the fix is off, the keypad works as it did before.</string>
+    <string name="toggle_root_note">With root, the app can do this now, without a restart. With the fix installed, getting root crashed the phone on almost every attempt during testing.</string>
+
+    <!-- Root screen -->
+    <string name="run_dryrun">Dry run</string>
+    <string name="run_install">Installing</string>
+    <string name="run_uninstall">Removing</string>
+    <string name="run_off">Turning off</string>
+    <string name="run_on">Turning on</string>
+    <string name="run_reboot">Restarting…</string>
+    <string name="run_done">Done</string>
+    <string name="run_failed">Failed</string>
+    <string name="run_busy">Wait until it finishes.</string>
+    <string name="run_no_root">No result: root wasn\'t available, was refused, or stopped partway. If there\'s no output above, nothing was changed; otherwise the output shows how far it got.</string>
+    <string name="run_failed_msg">It stopped at the step shown above. Everything before that step is listed in the output.</string>
+    <string name="run_unpack_failed">Couldn\'t unpack the app\'s files: %s</string>
+    <string name="run_interrupted">This screen was restarted, so the command wasn\'t run again. Check the status on the main screen.</string>
+    <string name="run_saved">Output saved to %s</string>
+    <string name="done_dryrun">Dry run passed. Nothing on the phone was changed.</string>
+    <string name="done_install">Installed.\n\nBefore you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher).\n\nCopy /sdcard/keydebounce-backup to your computer. Undo needs it.\n\nThen restart the phone to turn the fix on.</string>
+    <string name="done_uninstall">Removed. Restart the phone to finish.</string>
+    <string name="done_off">Off. The keypad works unfiltered now, and the fix stays off after restarts until you turn it back on.</string>
+    <string name="done_on">On.</string>
+    <string name="restart">Restart</string>
+    <string name="not_yet">Not yet</string>
+    <string name="restart_title">Restart now?</string>
+    <string name="restart_after_install">Before restarting, remove root or disable apps that ask for root at startup (such as Lucky Patcher). With the fix installed, an app that asks for root at startup can cause a reboot loop.\n\nIf you\'re removing root first, restart with the power key afterwards.</string>
+    <string name="restart_after_undo">Restart to finish removing the fix.</string>
+
+    <!-- Key tester -->
+    <string name="tester_title">Key tester</string>
+    <string name="tester_help">Type in the box. Every press is listed below, newest first. The extra digit comes from overlaps (a key pressed while another is held); with the fix on there should be none. Press Back to exit.</string>
+    <string name="tester_hint">Type here</string>
+    <string name="tester_summary">Presses %1$d · Overlaps %2$d\nFast repeats %3$d · Double downs %4$d</string>
+
+    <!-- Correction log -->
+    <string name="log_title">Correction log</string>
+    <string name="refresh">Refresh</string>
+    <string name="log_loading">Reading the log…</string>
+    <string name="log_need_permission">The app needs a one-time permission to read the log. From a computer:\n\nadb shell pm grant %1$s android.permission.READ_LOGS\nadb shell am force-stop %1$s\n\nThen open the app again.</string>
+    <string name="log_counts">Overlaps fixed: %1$d · Bounces caught: %2$d</string>
+    <string name="log_scope">Counts cover what\'s still in the phone\'s log, usually since the last restart.</string>
+    <string name="log_off_switch">At its last start the off switch was on, so it exited.</string>
+    <string name="log_empty">No keydebounce lines in the log yet. Startup messages can get pushed out of the log during boot.</string>
+    <string name="log_failed">Couldn\'t read the log: %s</string>
+</resources>

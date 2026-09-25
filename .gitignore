@@ -9,6 +9,14 @@ su-test-output.txt
 # Stock policy pulled from this specific phone: device-specific firmware, keep locally only
 policy-backup/
 
+# Gradle / Android Studio (app/)
+.gradle/
+build/
+local.properties
+*.apk
+*.iml
+.cxx/
+
 # Editor / OS
 .vscode/
 .idea/
