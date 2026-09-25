@@ -35,12 +35,13 @@ KeyDebounce is an Android app that installs, removes and checks the fix on the p
 | Install fix | Backs up the stock policy, dry-runs the policy compile, then installs. **Dry run only** checks without changing anything. | Yes, for the install only |
 | Undo (remove fix) | Restores the stock policy from the backup and removes the daemon | Yes |
 | Turn off / on | Shows the adb commands for the off switch. With root it can switch now, without a restart. | Only for "now" |
+| Run with root (no install) | Starts the daemon through `su`, like Shizuku starts its server. Nothing in `/system` or the policy changes, and it stops at restart unless **Start at boot** is on. | Yes, every start |
 | Key tester | Lists every key press and release with timing, and flags overlaps, fast repeats (bounce) and double presses | No |
 | Correction log | Counts the overlap and bounce corrections from logcat | No, but needs a one-time adb grant |
 
 The main screen shows whether the fix is on. When it's running, Android lists two `soc:matrix_keypad@0` keypads: the real one and the daemon's replacement.
 
-The app asks for root only when you pick Install, Undo or an "(root)" button. It never asks at startup or boot (see the warning below).
+The app asks for root only when you pick Install, Undo, root mode or an "(root)" button, or at boot if you turned on root mode's **Start at boot**. Start at boot is off by default and is always skipped when the permanent install is present (see the warning below).
 
 ### Get the app
 
@@ -60,6 +61,12 @@ The same run also has a `keydebounce-daemon` artifact: the daemon binary and `se
 4. Copy `/sdcard/keydebounce-backup` to your computer. Undo needs it.
 5. Remove root, or disable apps that ask for root at startup (see the warning below).
 6. Restart the phone. The main screen should say **Fix is ON**.
+
+### Root mode (no install)
+
+If the phone is rooted with root that lets `su` use `/dev/input` and `/dev/uinput` (Magisk does), **Run with root (no install)** → **Start now** runs the filter with no changes to `/system` or the SELinux policy. **Stop** ends it, and a restart ends it too. To start it after every restart, turn on **Start at boot**. The app then asks for root once the phone has booted. That boot attempt's output is saved as `boot-start.log`, next to the other logs listed below.
+
+If the root doesn't allow the keypad or `/dev/uinput`, the daemon exits right away and the app shows its log line. In that case use the permanent install. Starting the daemon over ADB (like Shizuku without root) can't work: the `adb shell` user can't open `/dev/uinput`.
 
 Every root command's output is saved to `/sdcard/Android/data/io.github.anonymousfliphones.keydebounce/files/<command>.log`.
 

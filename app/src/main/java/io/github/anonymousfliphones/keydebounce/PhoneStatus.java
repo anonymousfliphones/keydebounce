@@ -67,7 +67,7 @@ final class PhoneStatus {
         return n;
     }
 
-    private static boolean policyHasKeydebounce() {
+    static boolean policyHasKeydebounce() {
         try (BufferedReader r = new BufferedReader(new FileReader(POLICY))) {
             String line;
             while ((line = r.readLine()) != null) {

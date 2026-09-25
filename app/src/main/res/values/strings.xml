@@ -8,7 +8,8 @@
     <string name="state_off">Installed, but OFF</string>
     <string name="state_off_hint">Either the off switch is on or the fix hasn\'t started yet. The correction log shows which.</string>
     <string name="state_partial">Partly installed</string>
-    <string name="state_test">Filter running (test mode)</string>
+    <string name="state_root_mode">Fix is ON (root mode, not installed)</string>
+    <string name="start_at_boot_on">Root mode starts at boot.</string>
     <string name="state_none">Fix not installed</string>
     <string name="state_unsupported">XP3800 keypad not found</string>
     <string name="details">Daemon: %1$s · Policy: %2$s\nService: %3$s\nKeypad filter: %4$s\nRoot: %5$s</string>
@@ -23,6 +24,7 @@
     <string name="install_fix">Install fix</string>
     <string name="undo_fix">Undo (remove fix)</string>
     <string name="toggle">Turn off / on</string>
+    <string name="root_mode_button">Run with root (no install)</string>
 
     <!-- Dialogs -->
     <string name="install">Install</string>
@@ -50,7 +52,21 @@
 
     <string name="toggle_title">Turn the fix off or on</string>
     <string name="toggle_msg">From a computer (no root needed):\n\nOff:\nadb shell touch /data/local/tmp/keydebounce.off\nadb reboot\n\nOn:\nadb shell rm /data/local/tmp/keydebounce.off\nadb reboot\n\nWhen the fix is off, the keypad works as it did before.</string>
+    <string name="toggle_not_installed">The fix isn\'t installed. If you run it in root mode, use Run with root (no install) → Stop, and turn off Start at boot.</string>
     <string name="toggle_root_note">With root, the app can do this now, without a restart. With the fix installed, getting root crashed the phone on almost every attempt during testing.</string>
+
+    <string name="root_mode_title">Run with root, no install</string>
+    <string name="root_mode_msg">Starts the filter through root, the way Shizuku starts its server. Nothing in /system or the SELinux policy changes, and it stops when the phone restarts.\n\nStart at boot is %1$s. When it\'s on, the app asks for root after each restart to start the filter again.\n\nThe root has to allow access to the keypad and /dev/uinput (Magisk does). If it doesn\'t, the output shows why.</string>
+    <string name="root_mode_installed">The fix is installed, so it already starts at boot. Root mode is for phones without the install.</string>
+    <string name="need_root_mode">Root mode needs root. Without root, the only option is the permanent install from a computer (see the README on GitHub).</string>
+    <string name="start_now">Start now</string>
+    <string name="stop">Stop</string>
+    <string name="boot_turn_on">Start at boot: turn on</string>
+    <string name="boot_turn_off">Start at boot: turn off</string>
+    <string name="boot_now_on">Start at boot is on. After a restart the app asks for root and starts the filter.</string>
+    <string name="boot_now_off">Start at boot is off.</string>
+    <string name="on_word">on</string>
+    <string name="off_word">off</string>
 
     <!-- Root screen -->
     <string name="run_dryrun">Dry run</string>
@@ -58,6 +74,8 @@
     <string name="run_uninstall">Removing</string>
     <string name="run_off">Turning off</string>
     <string name="run_on">Turning on</string>
+    <string name="run_root_start">Starting (root mode)</string>
+    <string name="run_root_stop">Stopping (root mode)</string>
     <string name="run_reboot">Restarting…</string>
     <string name="run_done">Done</string>
     <string name="run_failed">Failed</string>
@@ -72,6 +90,8 @@
     <string name="done_uninstall">Removed. Restart the phone to finish.</string>
     <string name="done_off">Off. The keypad works unfiltered now, and the fix stays off after restarts until you turn it back on.</string>
     <string name="done_on">On.</string>
+    <string name="done_root_start">Running. It stops when the phone restarts, unless Start at boot is on.</string>
+    <string name="done_root_stop">Stopped. The keypad works unfiltered.</string>
     <string name="restart">Restart</string>
     <string name="not_yet">Not yet</string>
     <string name="restart_title">Restart now?</string>
