@@ -2,7 +2,7 @@
 
 Native daemon that sits between the XP3800 matrix keypad (`soc:matrix_keypad@0`, `/dev/input/event1`) and Android, fixing two confirmed problems:
 
-- **Overlap:** pressing a key while the previous one is still held makes the stock firmware insert an extra copy of the second key (5 then 6 typed as "566"). Every layer up to Android's input dispatch was verified clean; the extra digit is added inside built-in software. Fix: when a new key goes down, release any held key first.
+- **Overlap:** pressing a key while the previous one is still held makes the stock firmware insert an extra copy of the second key (5 then 6 typed as "566"). Every layer up to Android's input dispatch was verified clean; the extra digit is added inside built-in software. Swapping the IME for TT9 didn't help, so it isn't the keyboard app; no-root routes (IME, accessibility key filter) can't inject the early release this needs. Fix: when a new key goes down, release any held key first.
 - **Contact bounce:** a hard press can register a ghost second press ~10 ms after release. Fix: hold each release 20 ms; a same-key press inside that window is merged.
 
 Findings doc: https://claude.ai/code/artifact/d743b08c-8f0c-4289-8a52-9ad630f0f1e2
