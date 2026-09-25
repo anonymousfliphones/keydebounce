@@ -62,7 +62,7 @@
     <string name="run_done">Done</string>
     <string name="run_failed">Failed</string>
     <string name="run_busy">Wait until it finishes.</string>
-    <string name="run_no_root">Couldn\'t get root, or root was refused. Nothing was changed.</string>
+    <string name="run_no_root">No result: root wasn\'t available, was refused, or stopped partway. If there\'s no output above, nothing was changed; otherwise the output shows how far it got.</string>
     <string name="run_failed_msg">It stopped at the step shown above. Everything before that step is listed in the output.</string>
     <string name="run_unpack_failed">Couldn\'t unpack the app\'s files: %s</string>
     <string name="run_interrupted">This screen was restarted, so the command wasn\'t run again. Check the status on the main screen.</string>
