@@ -26,6 +26,7 @@
     <string name="undo_fix">Undo (remove fix)</string>
     <string name="toggle">Turn off / on</string>
     <string name="root_mode_button">Run with root (no install)</string>
+    <string name="bounce_filter_button">Bounce filter (no root)</string>
 
     <!-- Dialogs -->
     <string name="install">Install</string>
@@ -60,6 +61,12 @@
     <string name="root_mode_msg">Starts the filter through root, the way Shizuku starts its server. Nothing in /system or the SELinux policy changes, and it stops when the phone restarts.\n\nStart at boot is %1$s. When it\'s on, the app asks for root after each restart to start the filter again.\n\nThe root has to allow access to the keypad and /dev/uinput (Magisk does). If it doesn\'t, the output shows why.</string>
     <string name="root_mode_installed">The fix is installed, so it already starts at boot. Root mode is for phones without the install.</string>
     <string name="need_root_mode">Root mode needs root. Without root, the only option is the permanent install from a computer (see the README on GitHub).</string>
+
+    <string name="bounce_filter_title">Bounce filter (no root)</string>
+    <string name="bounce_filter_msg">Untested: this has not been run on a phone yet.\n\nNo root needed, but it only fixes contact bounce (5 -&gt; \"55\"). It cannot fix key overlap (5,6 -&gt; \"566\"), which is the main problem and still needs the root daemon.\n\nIt can\'t be turned on from inside the app. From a computer, once:\n\nadb shell settings put secure enabled_accessibility_services %1$s/%1$s.BounceFilterService\nadb shell settings put secure accessibility_enabled 1\n\n(If you already use another accessibility service on this phone, don\'t run those two commands — add the service to the existing list by hand instead, in Settings, so you don\'t remove it.)\n\nTo turn it off: Settings ▸ Accessibility ▸ %2$s, or open Settings from here.</string>
+    <string name="bounce_filter_open_settings">Open Accessibility settings</string>
+    <string name="bounce_filter_desc">Untested. No-root fallback that only fixes contact bounce (a key registering twice from one press). It does not fix key overlap (two keys pressed close together); that still needs the root daemon. See the README on GitHub.</string>
+
     <string name="start_now">Start now</string>
     <string name="stop">Stop</string>
     <string name="boot_turn_on">Start at boot: turn on</string>
