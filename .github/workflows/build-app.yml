@@ -97,9 +97,9 @@ jobs:
           For the **Sonim XP3800 on Android 8.1** only.
 
           ## What's new (not yet tested on a phone)
-          - **Install and Undo really show Restart now.** 1.9 fixed half of the false "failed": as the script exited it still tried once more to make /system read-only, and when that was refused as "busy" the whole script counted as failed, even though it had already printed "Reboot". That retry can no longer fail the script, so a finished Install or Undo shows Done and Restart. A real failure still shows as failed.
-          - **Install's final checks run again**, starting with the stock policy backup: both `.bak` files must be the stock policy (checked against the vendor's own hash) with the stock SELinux label. The false "failed" skipped these checks.
-          - **Check install**, for an install that showed the false "failed": after installing, and before restarting, press Install fix → Check install. It reruns those checks with root and changes nothing. Restart only once it says the install checks out.
+          - **Root Manager's root is recognized properly.** Earlier versions assumed the XP3800 root turns off at every restart and said "Root isn't active, open the root app". That was wrong: `su` stays installed, and the first `su` after a restart runs Root Manager's kernel exploit (about a second, and it can crash the phone). After that, root is instant and safe until the next restart. Opening Root Manager doesn't run `su`, so that advice did nothing.
+          - **Start root.** If nothing has used root since the restart, root actions now say "Root hasn't started yet", explain the crash risk, and offer **Start root**, which runs the exploit only after you confirm. The app still never does this by itself, and never at boot (that caused a reboot loop).
+          - **Check install works after a restart too.** It used to be offered only before the first restart with the fix. It runs install's final checks again, starting with the stock policy backup (`.bak`), and changes nothing.
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.

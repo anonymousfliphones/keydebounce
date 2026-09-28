@@ -2,9 +2,7 @@ package io.github.anonymousfliphones.keydebounce;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.view.View;
 import android.os.Bundle;
@@ -46,18 +44,9 @@ public class LogActivity extends Activity {
         return c.checkSelfPermission(Manifest.permission.READ_LOGS) == PackageManager.PERMISSION_GRANTED;
     }
 
-    /** Runs "pm grant ... READ_LOGS" through root, unless the XP3800 root is off. */
+    /** Runs "pm grant ... READ_LOGS" through root. */
     static void grantWithRoot(Activity a) {
-        if (RootShell.rootInactive(a)) {
-            new AlertDialog.Builder(a)
-                    .setTitle(R.string.root_inactive_title)
-                    .setMessage(R.string.root_inactive_msg)
-                    .setPositiveButton(R.string.close, null)
-                    .show();
-            return;
-        }
-        a.startActivity(new Intent(a, RootActivity.class)
-                .putExtra(RootActivity.EXTRA_COMMAND, RootActivity.GRANT_LOGS));
+        RootActivity.launch(a, RootActivity.GRANT_LOGS);
     }
 
     @Override

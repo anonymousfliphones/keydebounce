@@ -36,6 +36,7 @@ The app must never run `su` on its own (startup, status checks): root requests w
 - `dryrun.sh` compiles the policy on the phone exactly as init does; its baseline output is byte-identical to `/vendor/etc/selinux/precompiled_sepolicy`. Always dry-run before changing policy.
 - Runs as user `system`, groups `input` + `bluetooth` (owner/group of `/dev/uinput`), domain `u:r:keydebounce:s0`, started on `sys.boot_completed=1`, oneshot.
 - Replacement uinput device keeps the name `soc:matrix_keypad@0` so Android loads the same `.kl`/`.idc`. If the daemon dies, the kernel drops the grab and the keypad works unfiltered.
+- Root Manager (`com.flipphoneguy.root.xp3`, https://github.com/flipphoneguy/root-sonim-xp3800) keeps `su` in `/system/bin` for good; it never "turns off". The first `su` after each boot runs its CVE-2019-2215 exploit (~1.2 s, can panic the kernel), which sets SELinux permissive and starts a daemon on `/data/local/tmp/.su.sock`; later `su` calls go to the daemon with no kernel risk. Opening the Root Manager app doesn't run `su` (its "Root: INSTALLED" only checks the file). The app detects "not started this boot" by failing to read `plat_sepolicy.cil` (`RootShell.rootNotStarted`) and only runs that first `su` after the user confirms **Start root**; never at boot.
 - Logs to logcat tag `keydebounce` (`overlap:` and `bounce:` lines = corrections). Boot noise can push early lines out of the buffer.
 
 ## Current state of the user's phone (2026-09-24)
