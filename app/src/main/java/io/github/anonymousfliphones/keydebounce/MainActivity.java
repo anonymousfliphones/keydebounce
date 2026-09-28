@@ -155,14 +155,10 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         }
     }
 
-    /**
-     * Offers install's final checks (the .bak backup above all) again, for an install
-     * whose checks didn't run. Only before the first restart with the fix: init hasn't
-     * seen the service yet, and root requests with the policy loaded crash the phone.
-     */
+    /** Offers install's final checks (the .bak backup above all) again, changing nothing. */
     private void onAlreadyInstalled(PhoneStatus s) {
         AlertDialog.Builder b = new AlertDialog.Builder(this).setTitle(R.string.install_title);
-        if (s.suFound && s.service.isEmpty()) {
+        if (s.suFound) {
             b.setMessage(getString(R.string.already_installed) + "\n\n" + getString(R.string.check_install_msg))
                     .setPositiveButton(R.string.check_install, (d, w) -> run(RootActivity.VERIFY))
                     .setNegativeButton(R.string.close, null);
@@ -260,11 +256,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
     }
 
     private void run(String command) {
-        if (RootShell.rootInactive(this)) {
-            message(R.string.root_inactive_title, getString(R.string.root_inactive_msg));
-            return;
-        }
-        startActivity(new Intent(this, RootActivity.class).putExtra(RootActivity.EXTRA_COMMAND, command));
+        RootActivity.launch(this, command);
     }
 
     private void message(int title, String text) {

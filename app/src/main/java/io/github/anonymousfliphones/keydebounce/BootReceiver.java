@@ -21,10 +21,11 @@ import java.util.Locale;
  * Root mode's "Start at boot": starts the daemon through su (kd.sh rootstart) after a
  * restart. With a root that is on at boot (Magisk) it starts right away.
  *
- * With the XP3800 root it waits: that root is off after every restart until the root
- * app turns it on, and su while it's off crashes the phone. So from boot it checks every
- * 30 seconds, without su, and starts once root has been on for two checks in a row; the
- * second check keeps su away from a root app still turning root on.
+ * With Root Manager (the XP3800 root) it waits: the first su after each boot runs its
+ * kernel exploit, which can crash the phone, and doing that at boot caused a reboot loop.
+ * So it never starts root itself. From boot it checks every 30 seconds, without su,
+ * whether something else has started root, and starts once root has been up for two
+ * checks in a row; the second check keeps su away from an exploit still running.
  *
  * Never asks for root when the permanent install is present: with its policy loaded,
  * root requests crashed the phone and caused reboot loops.
@@ -80,9 +81,9 @@ public class BootReceiver extends BroadcastReceiver {
             return;
         }
         SharedPreferences p = prefs(app);
-        if (RootShell.rootInactive(app)) {
+        if (RootShell.rootNotStarted(app)) {
             if (!p.getBoolean(WAITING_LOGGED, false)) {
-                log(app, true, "Root isn't active yet. Open the root app; the filter starts about a minute after root is on. Checking every 30 seconds.");
+                log(app, true, "Root hasn't started since the restart. KeyDebounce doesn't start it at boot: the first su runs Root Manager's kernel exploit, which can crash the phone. Once something else has used su, the filter starts 30 to 60 seconds later. Checking every 30 seconds.");
             }
             p.edit().putBoolean(ROOT_SEEN, false).putBoolean(WAITING_LOGGED, true).apply();
             schedule(app, RECHECK_MS);
@@ -90,7 +91,7 @@ public class BootReceiver extends BroadcastReceiver {
         }
         if (!p.getBoolean(ROOT_SEEN, false)) {
             p.edit().putBoolean(ROOT_SEEN, true).apply();
-            log(app, true, "Root is active. Starting after one more check in 30 seconds.");
+            log(app, true, "Root has started. Starting after one more check in 30 seconds.");
             schedule(app, RECHECK_MS);
             return;
         }
@@ -118,8 +119,8 @@ public class BootReceiver extends BroadcastReceiver {
         Intent i = new Intent(c, BootReceiver.class).setAction(ACTION_CHECK);
         PendingIntent pi = PendingIntent.getBroadcast(c, 0, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
-        // Not a wakeup alarm: while root stays off this repeats, and it shouldn't keep
-        // waking the phone. It fires once the phone is awake, e.g. to open the root app.
+        // Not a wakeup alarm: until root starts this repeats, and it shouldn't keep
+        // waking the phone. It fires once the phone is awake, e.g. to start root.
         am.setExact(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + delayMs, pi);
     }
 

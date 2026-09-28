@@ -24,23 +24,24 @@ final class RootShell {
 
     /** Exit code when su couldn't be started or refused the command. */
     static final int NO_ROOT = -1;
-    /** Exit code when su wasn't called because the XP3800 root isn't active. */
-    static final int ROOT_INACTIVE = -2;
+    /** Exit code when su wasn't called because Root Manager's root hasn't started this boot. */
+    static final int ROOT_NOT_STARTED = -2;
 
     /**
-     * The XP3800 root turns itself off at every restart. Running its su while it's off
-     * crashes the phone within a second (it falls back to the root exploit), and at boot
-     * that becomes a reboot loop.
+     * Root Manager, the XP3800 root. Its su stays in /system/bin for good, but the first su
+     * after each boot runs its kernel exploit (CVE-2019-2215, about a second), which can
+     * crash the phone; at boot that became a reboot loop. The exploit turns SELinux off
+     * and starts a daemon that serves every later su with no kernel risk, until the next
+     * restart. Opening the Root Manager app doesn't run su.
      */
     static final String XP3_ROOT = "com.flipphoneguy.root.xp3";
 
     /**
-     * True when the XP3800 root is installed but not active, so su must not be run.
-     * While it's active, the root makes the untrusted_app SELinux domain permissive, so
-     * this app can read the policy file; while it's off, SELinux refuses. Other roots
-     * aren't checked.
+     * True when Root Manager is installed and nothing has run su since this boot, so the
+     * next su runs the exploit. This app can read the policy file only once the exploit
+     * has turned SELinux off. Other roots aren't checked.
      */
-    static boolean rootInactive(Context c) {
+    static boolean rootNotStarted(Context c) {
         if (!isXp3RootInstalled(c)) return false;
         try (FileInputStream in = new FileInputStream(PhoneStatus.POLICY)) {
             in.read();
@@ -82,10 +83,15 @@ final class RootShell {
     /**
      * Runs "sh kd.sh command dir" through su, passing each output line to out.
      * Blocks until it finishes; call from a background thread. Returns kd.sh's
-     * exit code, NO_ROOT, or ROOT_INACTIVE (su not called).
+     * exit code, NO_ROOT, or ROOT_NOT_STARTED (su not called).
      */
     static int run(Context c, File dir, String command, Output out) {
-        if (rootInactive(c)) return ROOT_INACTIVE;
+        return run(c, dir, command, false, out);
+    }
+
+    /** startRoot: the user agreed to start Root Manager's root, exploit and all, if needed. */
+    static int run(Context c, File dir, String command, boolean startRoot, Output out) {
+        if (!startRoot && rootNotStarted(c)) return ROOT_NOT_STARTED;
         Process p;
         try {
             p = new ProcessBuilder("su").redirectErrorStream(true).start();
