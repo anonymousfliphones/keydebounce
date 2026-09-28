@@ -1,6 +1,6 @@
 # keydebounce
 
-Fixes double key presses on the **Sonim XP3800** keypad (Android 8.1).
+Fixes double key presses on the **Sonim XP3800 Verizon Variant** keypad (Android 8.1).
 
 > [!CAUTION]
 > **Use at your own risk.** This project changes low-level parts of the phone. The permanent install rewrites the SELinux security policy in `/system` and adds a system-level boot service. Root mode runs a daemon as root that takes over the keypad input device.
