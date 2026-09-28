@@ -252,9 +252,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         new AlertDialog.Builder(this)
                 .setTitle(R.string.boot_restart_title)
                 .setMessage(R.string.boot_restart_msg)
-                .setPositiveButton(R.string.restart_now, (d, w) -> startActivity(new Intent(this, RootActivity.class)
-                        .putExtra(RootActivity.EXTRA_COMMAND, RootActivity.REBOOT)
-                        .putExtra(RootActivity.EXTRA_START_ROOT, true)))
+                .setPositiveButton(R.string.restart_now, (d, w) -> RootActivity.restartInBackground(this))
                 .setNegativeButton(R.string.later, null)
                 .show();
     }
