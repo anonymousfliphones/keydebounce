@@ -32,6 +32,7 @@ public class RootActivity extends Activity {
     static final String ROOT_START = "rootstart";
     static final String ROOT_STOP = "rootstop";
     static final String REBOOT = "reboot";
+    static final String GRANT_LOGS = "grantlogs";
 
     private final Handler ui = new Handler(Looper.getMainLooper());
     private final StringBuilder transcript = new StringBuilder();
@@ -42,6 +43,7 @@ public class RootActivity extends Activity {
     private Button restart;
     private Button close;
     private boolean running;
+    private boolean succeeded;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,10 +56,10 @@ public class RootActivity extends Activity {
         restart = findViewById(R.id.restart);
         close = findViewById(R.id.close);
         restart.setOnClickListener(v -> confirmRestart());
-        close.setOnClickListener(v -> finish());
+        close.setOnClickListener(v -> close());
 
         command = getIntent().getStringExtra(EXTRA_COMMAND);
-        if (!Arrays.asList(DRYRUN, INSTALL, UNINSTALL, OFF, ON, ROOT_START, ROOT_STOP, REBOOT).contains(command)) {
+        if (!Arrays.asList(DRYRUN, INSTALL, UNINSTALL, OFF, ON, ROOT_START, ROOT_STOP, REBOOT, GRANT_LOGS).contains(command)) {
             finish();
             return;
         }
@@ -98,6 +100,7 @@ public class RootActivity extends Activity {
     private void finished(int code) {
         running = false;
         boolean ok = code == 0;
+        succeeded = ok;
         title.setText(ok ? R.string.run_done : R.string.run_failed);
         title.setTextColor(getColor(ok ? R.color.good : R.color.bad));
         append("");
@@ -120,6 +123,16 @@ public class RootActivity extends Activity {
         } else {
             close.requestFocus();
         }
+    }
+
+    private void close() {
+        if (GRANT_LOGS.equals(command) && succeeded) {
+            // READ_LOGS only reaches a process started after the grant.
+            finishAffinity();
+            android.os.Process.killProcess(android.os.Process.myPid());
+            return;
+        }
+        finish();
     }
 
     private void confirmRestart() {
@@ -153,7 +166,7 @@ public class RootActivity extends Activity {
         if (running) {
             Toast.makeText(this, R.string.run_busy, Toast.LENGTH_SHORT).show();
         } else {
-            super.onBackPressed();
+            close();
         }
     }
 
@@ -165,6 +178,7 @@ public class RootActivity extends Activity {
         if (ROOT_START.equals(command)) return R.string.run_root_start;
         if (ROOT_STOP.equals(command)) return R.string.run_root_stop;
         if (REBOOT.equals(command)) return R.string.run_reboot;
+        if (GRANT_LOGS.equals(command)) return R.string.run_grant_logs;
         return R.string.run_dryrun;
     }
 
@@ -176,6 +190,7 @@ public class RootActivity extends Activity {
         if (ROOT_START.equals(command)) return R.string.done_root_start;
         if (ROOT_STOP.equals(command)) return R.string.done_root_stop;
         if (REBOOT.equals(command)) return R.string.run_reboot;
+        if (GRANT_LOGS.equals(command)) return R.string.done_grant_logs;
         return R.string.done_dryrun;
     }
 }

@@ -12,6 +12,7 @@
 #   off | on   create/remove the kill switch and stop/start the daemon now
 #   rootstart  run the daemon from root without installing anything (until restart)
 #   rootstop   stop the daemon started by rootstart
+#   grantlogs  grant this app READ_LOGS for the correction log
 #   reboot
 #
 # Every check runs before the step it guards; a failed check stops the command.
@@ -235,6 +236,8 @@ case "$CMD" in
   on) turn_on ;;
   rootstart) root_start ;;
   rootstop) root_stop ;;
+  # READ_LOGS can't be asked for with a normal permission prompt; only adb or root can grant it.
+  grantlogs) pm grant io.github.anonymousfliphones.keydebounce android.permission.READ_LOGS || fail "pm grant failed"; echo "granted" ;;
   # The reboot binary only sets sys.powerctl, and the property service refused that
   # for the app's root shell (reboot.log: "reboot: Success", then exit 1). Ask
   # system_server instead, which may reboot and accepts root as the caller.

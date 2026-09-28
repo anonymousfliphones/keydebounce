@@ -2,7 +2,11 @@ package io.github.anonymousfliphones.keydebounce;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.view.View;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,6 +28,7 @@ public class LogActivity extends Activity {
     private final Handler ui = new Handler(Looper.getMainLooper());
     private TextView summary;
     private TextView lines;
+    private View grant;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,8 +36,28 @@ public class LogActivity extends Activity {
         setContentView(R.layout.activity_log);
         summary = findViewById(R.id.summary);
         lines = findViewById(R.id.lines);
+        grant = findViewById(R.id.grant);
+        grant.setOnClickListener(v -> grantWithRoot(this));
         findViewById(R.id.refresh).setOnClickListener(v -> load());
         findViewById(R.id.refresh).requestFocus();
+    }
+
+    static boolean canReadLogs(Context c) {
+        return c.checkSelfPermission(Manifest.permission.READ_LOGS) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** Runs "pm grant ... READ_LOGS" through root, unless the XP3800 root is off. */
+    static void grantWithRoot(Activity a) {
+        if (RootShell.rootInactive(a)) {
+            new AlertDialog.Builder(a)
+                    .setTitle(R.string.root_inactive_title)
+                    .setMessage(R.string.root_inactive_msg)
+                    .setPositiveButton(R.string.close, null)
+                    .show();
+            return;
+        }
+        a.startActivity(new Intent(a, RootActivity.class)
+                .putExtra(RootActivity.EXTRA_COMMAND, RootActivity.GRANT_LOGS));
     }
 
     @Override
@@ -42,11 +67,14 @@ public class LogActivity extends Activity {
     }
 
     private void load() {
-        if (checkSelfPermission(Manifest.permission.READ_LOGS) != PackageManager.PERMISSION_GRANTED) {
+        if (!canReadLogs(this)) {
             summary.setText(getString(R.string.log_need_permission, getPackageName()));
             lines.setText("");
+            grant.setVisibility(View.VISIBLE);
+            grant.requestFocus();
             return;
         }
+        grant.setVisibility(View.GONE);
         summary.setText(R.string.log_loading);
         new Thread(() -> {
             List<String> out = new ArrayList<>();

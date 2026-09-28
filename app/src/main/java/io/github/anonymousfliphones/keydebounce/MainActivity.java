@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 /** Status of the fix, plus install, undo, off/on, key tester and log. */
 public class MainActivity extends Activity implements InputManager.InputDeviceListener {
+    private static final String ASKED_LOGS = "asked_read_logs";
     private final Handler ui = new Handler(Looper.getMainLooper());
     private InputManager inputManager;
     private TextView state;
@@ -107,6 +108,21 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         if (s.installed() && !s.filtering()) text += "\n\n" + getString(R.string.state_off_hint);
         if (!s.installed() && BootReceiver.startAtBoot(this)) text += "\n" + getString(R.string.start_at_boot_on);
         details.setText(text);
+        maybeAskForLogs(s);
+    }
+
+    /** Once, on first open: offer to grant READ_LOGS through root for the correction log. */
+    private void maybeAskForLogs(PhoneStatus s) {
+        if (!s.suFound || LogActivity.canReadLogs(this)) return;
+        android.content.SharedPreferences p = getSharedPreferences("settings", MODE_PRIVATE);
+        if (p.getBoolean(ASKED_LOGS, false)) return;
+        p.edit().putBoolean(ASKED_LOGS, true).apply();
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.grant_logs_title)
+                .setMessage(getString(R.string.grant_logs_msg, getPackageName()))
+                .setPositiveButton(R.string.grant_logs_button, (d, w) -> LogActivity.grantWithRoot(this))
+                .setNegativeButton(R.string.not_now, null)
+                .show();
     }
 
     private String policyText(int policy) {

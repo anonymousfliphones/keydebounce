@@ -79,7 +79,11 @@ relabel u:object_r:sepolicy_file:s0 $CIL.bak $SHA.bak
 cp $W/plat_sepolicy.cil $CIL
 printf '%s\n' "$NEWHASH" > $SHA
 sync
-mount -o ro,remount /system
+# Refused ("busy") while any process has a /system file open for writing, or a deleted
+# one still open. Everything above is written and synced, so that's not a failure:
+# a restart mounts /system read-only again.
+mount -o ro,remount /system 2>/dev/null ||
+    echo "note: /system couldn't be made read-only again (busy). The install is done; restarting does it."
 
 ls -laZ /system/bin/keydebounce /system/etc/init/keydebounce.rc $CIL $CIL.bak $SHA $SHA.bak
 echo "hash file: $(cat $SHA)"
