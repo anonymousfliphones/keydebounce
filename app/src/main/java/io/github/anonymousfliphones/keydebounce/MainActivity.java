@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +31,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         findViewById(R.id.undo).setOnClickListener(v -> onUndo());
         findViewById(R.id.toggle).setOnClickListener(v -> onToggle());
         findViewById(R.id.root_mode).setOnClickListener(v -> onRootMode());
+        findViewById(R.id.bounce_filter).setOnClickListener(v -> onBounceFilter());
         findViewById(R.id.tester).setOnClickListener(v -> startActivity(new Intent(this, KeyTestActivity.class)));
         findViewById(R.id.log).setOnClickListener(v -> startActivity(new Intent(this, LogActivity.class)));
         findViewById(R.id.install).requestFocus();
@@ -198,6 +200,17 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
                     })
                     .show();
         }
+    }
+
+    /** No-root, bounce-only fallback. Untested: see BounceFilterService and the README. */
+    private void onBounceFilter() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.bounce_filter_title)
+                .setMessage(getString(R.string.bounce_filter_msg, getPackageName(), getString(R.string.app_name)))
+                .setPositiveButton(R.string.bounce_filter_open_settings,
+                        (d, w) -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)))
+                .setNegativeButton(R.string.close, null)
+                .show();
     }
 
     private void run(String command) {
