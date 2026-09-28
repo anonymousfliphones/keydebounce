@@ -12,6 +12,9 @@ Fixes double key presses on the **Sonim XP3800 Verizon Variant** keypad (Android
 > [!WARNING]
 > **The on-phone `.bak` backup and restore have never been tested.** The `.bak` backup in `sepolicy/install.sh` and the restore in `sepolicy/uninstall.sh` were written after the only real install, and have never been run on a phone. That install used an earlier script that kept the stock policy backup off the phone. Keep your own copy of the stock policy files and a full system backup before relying on them.
 
+> [!WARNING]
+> **Only built and tested on the Verizon XP3800 variant.** Other carriers/firmware variants of the XP3800 almost certainly ship a different base SELinux policy, and `keydebounce.cil` was written against Verizon's. `sepolicy/install.sh` now refuses to proceed if this device's compiled stock policy doesn't match its own `/vendor/etc/selinux/precompiled_sepolicy` (the same check `dryrun.sh` reports, but enforced as a hard stop instead of an FYI line) — so an install on a mismatched variant should fail cleanly rather than half-apply. That check isn't a guarantee: it can only catch a policy that's structurally different, not one that's different in some subtler way that still compiles. Don't try this on a non-Verizon variant without a full system backup and EDL recovery ready.
+
 ## The problem
 
 On every XP3800, typing quickly produces doubled digits and letters in every app. Two separate causes were confirmed on the device:
