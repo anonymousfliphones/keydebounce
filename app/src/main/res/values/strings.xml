@@ -46,6 +46,8 @@
 
     <string name="install_title">Install the fix?</string>
     <string name="already_installed">The fix is already installed. To reinstall, use Undo, restart the phone, then install again.</string>
+    <string name="check_install">Check install</string>
+    <string name="check_install_msg">The phone hasn\'t restarted since the install. Check install reruns the install\'s final checks with root, changing nothing: the stock policy backup (.bak) is stock, and /system holds what was installed. Do this before restarting if the install showed \"failed\" after \"Installed. Reboot to start it.\"</string>
     <string name="install_msg">Before you start, have a backup of the system partition and an EDL flashing setup, in case the phone won\'t boot.\n\nThe app will:\n• Back up the stock policy on the phone, as .bak files next to the originals in /system/etc/selinux. Undo restores from them. (Untested: this backup has never been run on a phone. Keep your own copy too.)\n• Compile the new policy the way the phone does at boot, and stop without changing anything if that fails.\n• Install the daemon and the policy.\n\nAfterwards, before you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher). With the fix installed, getting root crashed the phone on almost every attempt.</string>
 
     <string name="undo_title">Remove the fix?</string>
@@ -85,6 +87,7 @@
     <!-- Root screen -->
     <string name="run_dryrun">Dry run</string>
     <string name="run_install">Installing</string>
+    <string name="run_verify">Checking the install</string>
     <string name="run_uninstall">Removing</string>
     <string name="run_off">Turning off</string>
     <string name="run_on">Turning on</string>
@@ -108,6 +111,7 @@
     <string name="run_saved">Output saved to %s</string>
     <string name="done_dryrun">Dry run passed. Nothing on the phone was changed.</string>
     <string name="done_install">Installed.\n\nBefore you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher).\n\nThe stock policy is backed up as .bak files in /system/etc/selinux. Undo restores from them.\n\nThen restart the phone to turn the fix on.</string>
+    <string name="done_verify">The install checks out: the stock policy backup (.bak) verifies, and /system holds what was installed.\n\nBefore you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher). Then restart the phone to turn the fix on.</string>
     <string name="done_uninstall">Removed. Restart the phone to finish.</string>
     <string name="done_off">Off. The keypad works unfiltered now, and the fix stays off after restarts until you turn it back on.</string>
     <string name="done_on">On.</string>

@@ -26,6 +26,7 @@ public class RootActivity extends Activity {
     // Commands understood by assets/kd/kd.sh.
     static final String DRYRUN = "dryrun";
     static final String INSTALL = "install";
+    static final String VERIFY = "verify";
     static final String UNINSTALL = "uninstall";
     static final String OFF = "off";
     static final String ON = "on";
@@ -59,7 +60,7 @@ public class RootActivity extends Activity {
         close.setOnClickListener(v -> close());
 
         command = getIntent().getStringExtra(EXTRA_COMMAND);
-        if (!Arrays.asList(DRYRUN, INSTALL, UNINSTALL, OFF, ON, ROOT_START, ROOT_STOP, REBOOT, GRANT_LOGS).contains(command)) {
+        if (!Arrays.asList(DRYRUN, INSTALL, VERIFY, UNINSTALL, OFF, ON, ROOT_START, ROOT_STOP, REBOOT, GRANT_LOGS).contains(command)) {
             finish();
             return;
         }
@@ -117,7 +118,7 @@ public class RootActivity extends Activity {
         if (saved != null) append(getString(R.string.run_saved, saved.getPath()));
 
         close.setVisibility(View.VISIBLE);
-        if (ok && (INSTALL.equals(command) || UNINSTALL.equals(command))) {
+        if (ok && (INSTALL.equals(command) || VERIFY.equals(command) || UNINSTALL.equals(command))) {
             restart.setVisibility(View.VISIBLE);
             restart.requestFocus();
         } else {
@@ -136,7 +137,7 @@ public class RootActivity extends Activity {
     }
 
     private void confirmRestart() {
-        int msg = INSTALL.equals(command) ? R.string.restart_after_install : R.string.restart_after_undo;
+        int msg = UNINSTALL.equals(command) ? R.string.restart_after_undo : R.string.restart_after_install;
         new AlertDialog.Builder(this)
                 .setTitle(R.string.restart_title)
                 .setMessage(msg)
@@ -172,6 +173,7 @@ public class RootActivity extends Activity {
 
     private static int titleFor(String command) {
         if (INSTALL.equals(command)) return R.string.run_install;
+        if (VERIFY.equals(command)) return R.string.run_verify;
         if (UNINSTALL.equals(command)) return R.string.run_uninstall;
         if (OFF.equals(command)) return R.string.run_off;
         if (ON.equals(command)) return R.string.run_on;
@@ -184,6 +186,7 @@ public class RootActivity extends Activity {
 
     private static int doneMessageFor(String command) {
         if (INSTALL.equals(command)) return R.string.done_install;
+        if (VERIFY.equals(command)) return R.string.done_verify;
         if (UNINSTALL.equals(command)) return R.string.done_uninstall;
         if (OFF.equals(command)) return R.string.done_off;
         if (ON.equals(command)) return R.string.done_on;
