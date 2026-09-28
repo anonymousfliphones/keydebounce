@@ -71,8 +71,8 @@
     <string name="stop">Stop</string>
     <string name="boot_button">Boot…</string>
     <string name="boot_title">Start at boot</string>
-    <string name="boot_msg">Start at boot is %1$s.\n\nWhen it\'s on, the app waits 2 minutes after a restart, then checks every 30 seconds whether root is on, without asking for root. Once root has been on for two checks in a row it starts the filter by itself. Nothing to tap.</string>
-    <string name="boot_xp3_note">This phone\'s root is off after every restart until you open the root app. Open it after a restart; the filter then starts by itself about a minute later. Asking for root while it\'s off crashes the phone, so the app never does.</string>
+    <string name="boot_msg">Start at boot is %1$s.\n\nWhen it\'s on, the filter starts by itself after a restart, with nothing to tap. With a root that\'s on at boot (Magisk) it starts right away.</string>
+    <string name="boot_xp3_note">This phone\'s root is off after every restart until you open the root app, and asking for root while it\'s off crashes the phone. So with this root the app checks every 30 seconds after a restart whether root is on, without asking for root. Open the root app; the filter starts by itself about a minute after root is on.</string>
     <string name="turn_on">Turn on</string>
     <string name="turn_off">Turn off</string>
     <string name="root_inactive_title">Root isn\'t active</string>
