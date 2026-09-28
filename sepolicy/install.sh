@@ -26,6 +26,24 @@ fi
 cat $STOCK $W/keydebounce.cil > $W/plat_sepolicy.cil
 NEWHASH=$(hash_of $W/plat_sepolicy.cil)
 
+# This project has only been built and tested against the Verizon XP3800's stock
+# policy. A different carrier/firmware variant can have a different base policy
+# that still passes the hash check above yet compiles to something else entirely.
+# Catch that by recompiling the untouched stock policy and comparing it to what
+# this device itself shipped precompiled, exactly like dryrun.sh reports but
+# enforced here as a hard stop instead of an FYI line.
+/system/bin/secilc $STOCK -M true -G -N -c "$(cat /sys/fs/selinux/policyvers)" \
+    $MAP /vendor/etc/selinux/nonplat_sepolicy.cil -o $W/baseline.policy -f /dev/null
+if [ "$(sha256sum < $W/baseline.policy | cut -d' ' -f1)" \
+     != "$(sha256sum < /vendor/etc/selinux/precompiled_sepolicy | cut -d' ' -f1)" ]; then
+    echo "This device's compiled stock policy doesn't match its own precompiled_sepolicy."
+    echo "That means this phone's base SELinux policy differs from the Verizon variant"
+    echo "keydebounce was built and tested against (likely a different carrier/firmware"
+    echo "build). Installing here is untested and could leave the phone unable to boot."
+    echo "Refusing to install."
+    exit 1
+fi
+
 # Compile exactly as init does at boot. Stop before touching /system if it fails.
 /system/bin/secilc $W/plat_sepolicy.cil -M true -G -N -c "$(cat /sys/fs/selinux/policyvers)" \
     $MAP /vendor/etc/selinux/nonplat_sepolicy.cil -o $W/test.policy -f /dev/null
