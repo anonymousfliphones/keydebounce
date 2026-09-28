@@ -99,7 +99,11 @@ jobs:
 
           For the **Sonim XP3800 on Android 8.1** only.
 
-          New in this release: the no-root **bounce filter** now works. In v1.3 it never received key presses because of a manifest bug. Tested on a Verizon XP3800: an injected bounce went from "55" to "5", normal typing is unchanged, and it runs alongside Mouse Toggle with no crashes. It only fixes contact bounce, not key overlap ("566"), which still needs the root daemon or the permanent install.
+          New in this release: **installs made with the app now actually run.** The app's root shell runs at the app's SELinux level, so the daemon and its startup file were created with that level (`s0:c512,c768`), and the daemon crashed at every boot before it started (`unable to stat "/proc/self/exe": Permission denied`). Install now sets the correct labels and checks them, and Undo puts the stock policy back with its stock label. **If you installed with an older build:** install this one, Undo, restart, then Install again.
+
+          The **Restart** button now asks the system to restart (`svc power reboot`) instead of setting `sys.powerctl`, which the app's root shell wasn't allowed to do. Untested; if it does nothing, restart with the power key.
+
+          Also in this release: the no-root **bounce filter** now works. In v1.3 it never received key presses because of a manifest bug. Tested on a Verizon XP3800: an injected bounce went from "55" to "5", normal typing is unchanged, and it runs alongside Mouse Toggle with no crashes. It only fixes contact bounce, not key overlap ("566"), which still needs the root daemon or the permanent install.
 
           If you enabled the v1.3 filter with the README's old command, check your accessibility list: that command replaced the whole list and turned off other services such as Mouse Toggle. Use the new command in the README, which adds to the list, then restart the phone. Updating the app removes the filter from the list, so add it again after installing this build.
 

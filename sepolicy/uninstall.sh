@@ -16,6 +16,19 @@ hash_of() { cat "$1" $MAP | sha256sum | cut -d' ' -f1; }
 
 verifies() { [ -f "$1" ] && [ -f "$2" ] && [ "$(hash_of "$1")" = "$(cat "$2")" ]; }
 
+# mv keeps the source's label, and .bak files made by the app's root shell before
+# v1.5 carry the app's MLS categories. Put the stock files back to their stock label.
+relabel() {
+    ctx=$1; shift
+    chcon "$ctx" "$@"
+    for f in "$@"; do
+        case "$(ls -Z "$f")" in
+            "$ctx "*) ;;
+            *) echo "Wrong SELinux label on $f: $(ls -Z "$f")"; exit 1 ;;
+        esac
+    done
+}
+
 if verifies $CIL.bak $SHA.bak; then
     SRC=bak; SRC_CIL=$CIL.bak; SRC_SHA=$SHA.bak
 elif verifies $STAGED/plat_sepolicy.cil $STAGED/plat_and_mapping_sepolicy.cil.sha256; then
@@ -37,6 +50,7 @@ else
     cp $SRC_SHA $SHA
     rm -f $CIL.bak $SHA.bak
 fi
+relabel u:object_r:sepolicy_file:s0 $CIL $SHA
 rm -f /system/bin/keydebounce /system/etc/init/keydebounce.rc
 sync
 mount -o ro,remount /system

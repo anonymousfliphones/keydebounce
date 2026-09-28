@@ -235,6 +235,15 @@ case "$CMD" in
   on) turn_on ;;
   rootstart) root_start ;;
   rootstop) root_stop ;;
-  reboot) sync; reboot ;;
+  # The reboot binary only sets sys.powerctl, and the property service refused that
+  # for the app's root shell (reboot.log: "reboot: Success", then exit 1). Ask
+  # system_server instead, which may reboot and accepts root as the caller.
+  reboot)
+    sync
+    echo "context: $(cat /proc/self/attr/current 2>/dev/null)"
+    svc power reboot
+    echo "svc power reboot didn't restart the phone (exit $?); trying the reboot binary"
+    reboot
+    ;;
   *) fail "unknown command: $CMD" ;;
 esac
