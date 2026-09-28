@@ -10,7 +10,9 @@ CIL=$S/plat_sepolicy.cil
 SHA=$S/plat_and_mapping_sepolicy.cil.sha256
 MAP=$S/mapping/27.0.cil
 STAGED=/data/local/tmp/kd_dry/stock
-trap 'mount -o ro,remount /system 2>/dev/null' EXIT
+# '|| :' matters: under set -e a failing command in an EXIT trap becomes the script's
+# exit status, so a refused (busy) remount here turned a finished run into "failed".
+trap 'mount -o ro,remount /system 2>/dev/null || :' EXIT
 
 hash_of() { cat "$1" $MAP | sha256sum | cut -d' ' -f1; }
 
