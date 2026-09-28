@@ -6,9 +6,9 @@ import android.content.Intent;
 import android.os.Bundle;
 
 /**
- * Start at boot with Root Manager: a minute after boot, if root still hasn't started,
- * asks whether to start it. The first su after a restart runs Root Manager's exploit,
- * which can crash the phone, so it only runs when the user presses Start.
+ * Start at boot with Root Manager, after an automatic start that never finished (the
+ * exploit probably crashed the phone): asks instead of trying again, so a crashing exploit
+ * can't become a reboot loop. Shown a minute after boot, only if root still hasn't started.
  */
 public class BootPromptActivity extends Activity {
     @Override
@@ -31,7 +31,7 @@ public class BootPromptActivity extends Activity {
                     finish();
                 })
                 .setNegativeButton(R.string.not_now, (d, w) -> {
-                    BootReceiver.log(this, true, "Not now pressed. Still checking in case root starts another way.");
+                    BootReceiver.log(this, true, "Not now pressed. The next restart tries automatically again.");
                     finish();
                 })
                 .setOnCancelListener(d -> finish())

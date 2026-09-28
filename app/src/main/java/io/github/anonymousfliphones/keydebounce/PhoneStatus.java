@@ -108,7 +108,7 @@ final class PhoneStatus {
     }
 
     /** Looks for an su binary without running it. */
-    private static boolean findSu() {
+    static boolean findSu() {
         Set<String> dirs = new LinkedHashSet<>(Arrays.asList(
                 "/system/bin", "/system/xbin", "/sbin", "/su/bin", "/system/sbin", "/vendor/bin"));
         String path = System.getenv("PATH");

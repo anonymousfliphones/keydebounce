@@ -236,11 +236,26 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
                 .setMessage(text)
                 .setPositiveButton(atBoot ? R.string.turn_off : R.string.turn_on, (d, w) -> {
                     BootReceiver.setStartAtBoot(this, !atBoot);
-                    Toast.makeText(this, atBoot ? R.string.boot_now_off : R.string.boot_now_on,
-                            Toast.LENGTH_LONG).show();
                     refresh();
+                    if (atBoot) {
+                        Toast.makeText(this, R.string.boot_now_off, Toast.LENGTH_LONG).show();
+                    } else {
+                        askRestartForBoot();
+                    }
                 })
                 .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    /** Start at boot only acts after a restart: offer one now. */
+    private void askRestartForBoot() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.boot_restart_title)
+                .setMessage(R.string.boot_restart_msg)
+                .setPositiveButton(R.string.restart_now, (d, w) -> startActivity(new Intent(this, RootActivity.class)
+                        .putExtra(RootActivity.EXTRA_COMMAND, RootActivity.REBOOT)
+                        .putExtra(RootActivity.EXTRA_START_ROOT, true)))
+                .setNegativeButton(R.string.later, null)
                 .show();
     }
 
