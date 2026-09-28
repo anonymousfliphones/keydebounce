@@ -141,7 +141,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
             message(R.string.unsupported_title, getString(R.string.unsupported_msg, Build.VERSION.RELEASE,
                     getString(s.keypads > 0 ? R.string.found : R.string.not_found)));
         } else if (s.policy == PhoneStatus.POLICY_YES || s.installed()) {
-            message(R.string.install_title, getString(R.string.already_installed));
+            onAlreadyInstalled(s);
         } else if (!s.suFound) {
             message(R.string.need_root_title, getString(R.string.need_root_install));
         } else {
@@ -153,6 +153,23 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
                     .setNegativeButton(R.string.cancel, null)
                     .show();
         }
+    }
+
+    /**
+     * Offers install's final checks (the .bak backup above all) again, for an install
+     * whose checks didn't run. Only before the first restart with the fix: init hasn't
+     * seen the service yet, and root requests with the policy loaded crash the phone.
+     */
+    private void onAlreadyInstalled(PhoneStatus s) {
+        AlertDialog.Builder b = new AlertDialog.Builder(this).setTitle(R.string.install_title);
+        if (s.suFound && s.service.isEmpty()) {
+            b.setMessage(getString(R.string.already_installed) + "\n\n" + getString(R.string.check_install_msg))
+                    .setPositiveButton(R.string.check_install, (d, w) -> run(RootActivity.VERIFY))
+                    .setNegativeButton(R.string.close, null);
+        } else {
+            b.setMessage(R.string.already_installed).setPositiveButton(R.string.close, null);
+        }
+        b.show();
     }
 
     private void onUndo() {

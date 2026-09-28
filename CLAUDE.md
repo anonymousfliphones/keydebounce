@@ -17,7 +17,7 @@ Findings doc: https://claude.ai/code/artifact/d743b08c-8f0c-4289-8a52-9ad630f0f1
 | `policy-backup/` | PC copy of the stock `plat_sepolicy.cil` + `.sha256` from the user's phone, pulled before its first install. Never delete. |
 | `test/` | `harness.sh` + `inject_56*.sh`: automated repro via `sendevent`, reads the dialer field back with `uiautomator` |
 | `app/` | Android app (Java, no AndroidX): status, Install/Undo/Off-On via root, key tester, correction log. Package `io.github.anonymousfliphones.keydebounce`, minSdk 26. |
-| `app/src/main/assets/kd/kd.sh` | Root helper the app runs via `su`. Wraps `sepolicy/*.sh`: stages to `/data/local/tmp/kd_dry`, checks the policy is stock (the backup itself is `install.sh`'s `.bak` files), dry-runs, refuses unless the policy is stock and the baseline compile matches `/vendor/etc/selinux/precompiled_sepolicy`. `rootstart`/`rootstop` = root mode: runs the daemon from `/data/local/tmp/kd_dry/run/` via `setsid`, no install. |
+| `app/src/main/assets/kd/kd.sh` | Root helper the app runs via `su`. Wraps `sepolicy/*.sh`: stages to `/data/local/tmp/kd_dry`, checks the policy is stock (the backup itself is `install.sh`'s `.bak` files), dry-runs, refuses unless the policy is stock and the baseline compile matches `/vendor/etc/selinux/precompiled_sepolicy`. `verify` = install's final checks on their own (`.bak` is stock with the stock label, `/system` matches what install staged), changing nothing; the app offers it as Check install only before the first restart with the fix. `rootstart`/`rootstop` = root mode: runs the daemon from `/data/local/tmp/kd_dry/run/` via `setsid`, no install. |
 | `.github/workflows/build-app.yml` | CI: builds the APK and uploads `keydebounce-apk` + `keydebounce-daemon` artifacts |
 
 ## Build

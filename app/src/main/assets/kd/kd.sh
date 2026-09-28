@@ -7,6 +7,8 @@
 #              (stock, stock + keydebounce) the way init does. Changes nothing.
 #   install    check the policy is stock, dry run, then sepolicy/install.sh, which
 #              backs up the stock policy as .bak files in /system/etc/selinux
+#   verify     rerun install's final checks without changing anything: the .bak
+#              backup is stock and labeled, and /system holds what install staged
 #   uninstall  check a stock backup verifies, then sepolicy/uninstall.sh
 #              (.bak files first; older installs: $STOCK or /sdcard/keydebounce-backup)
 #   off | on   create/remove the kill switch and stop/start the daemon now
@@ -112,16 +114,40 @@ install_fix() {
   dryrun
   echo "== installing =="
   sh $W/install.sh || fail "install.sh failed. Run Undo before restarting."
-  good_bak || fail "the .bak backup in $S is missing or doesn't verify. Run Undo before restarting."
-  echo "stock policy backed up: $S/plat_sepolicy.cil.bak"
-  cmp -s $W/keydebounce /system/bin/keydebounce || fail "the installed daemon doesn't match. Run Undo before restarting."
-  cmp -s $W/plat_sepolicy.cil $S/plat_sepolicy.cil || fail "the installed policy doesn't match. Run Undo before restarting."
-  [ "$(first $S/plat_and_mapping_sepolicy.cil.sha256)" = "$(hash_with_mapping $S/plat_sepolicy.cil)" ] ||
-    fail "the policy hash file doesn't match. Run Undo before restarting."
+  check_install
   if [ -e $KILL ]; then
     rm -f $KILL && echo "off switch removed"
   fi
   echo "installed"
+}
+
+# Install's final checks, also run on their own by verify. They compare /system
+# with what install staged in $W, so verify doesn't stage: a newer app's files
+# could differ from what was installed.
+check_install() {
+  echo "== checking the install =="
+  good_bak || fail "the .bak backup in $S is missing or isn't the stock policy. Run Undo before restarting."
+  for f in $S/plat_sepolicy.cil.bak $S/plat_and_mapping_sepolicy.cil.sha256.bak; do
+    case "$(ls -Z $f)" in
+      "u:object_r:sepolicy_file:s0 "*) ;;
+      *) fail "wrong SELinux label on $f: $(ls -Z $f). Run Undo before restarting." ;;
+    esac
+  done
+  echo "stock policy backup (.bak) verifies: $S/plat_sepolicy.cil.bak"
+  [ -f $W/keydebounce ] && [ -f $W/plat_sepolicy.cil ] ||
+    fail "the files install staged in $W are gone, so /system can't be compared with them"
+  cmp -s $W/keydebounce /system/bin/keydebounce || fail "the installed daemon doesn't match. Run Undo before restarting."
+  cmp -s $W/plat_sepolicy.cil $S/plat_sepolicy.cil || fail "the installed policy doesn't match. Run Undo before restarting."
+  [ "$(first $S/plat_and_mapping_sepolicy.cil.sha256)" = "$(hash_with_mapping $S/plat_sepolicy.cil)" ] ||
+    fail "the policy hash file doesn't match. Run Undo before restarting."
+  echo "installed daemon, policy and hash file match"
+}
+
+verify_install() {
+  preflight
+  policy_installed || fail "the fix isn't in the policy; nothing to check"
+  check_install
+  echo "verified"
 }
 
 uninstall_fix() {
@@ -231,6 +257,7 @@ root_stop() {
 case "$CMD" in
   dryrun) preflight; stage; dryrun ;;
   install) install_fix ;;
+  verify) verify_install ;;
   uninstall) uninstall_fix ;;
   off) turn_off ;;
   on) turn_on ;;

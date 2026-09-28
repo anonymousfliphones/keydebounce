@@ -62,7 +62,7 @@ KeyDebounce is an Android app that installs, removes and checks the fix on the p
 
 | Button | What it does | Root |
 | --- | --- | --- |
-| Install fix | Backs up the stock policy, dry-runs the policy compile, then installs. **Dry run only** checks without changing anything. | Yes, for the install only |
+| Install fix | Backs up the stock policy, dry-runs the policy compile, installs, then checks the `.bak` backup and the installed files. **Dry run only** checks without changing anything. Once installed, and before the first restart, **Check install** reruns the final checks. | Yes, for the install and the check only |
 | Undo (remove fix) | Restores the stock policy from the backup and removes the daemon | Yes |
 | Turn off / on | Shows the adb commands for the off switch. With root it can switch now, without a restart. | Only for "now" |
 | Run with root (no install) | Starts the daemon through `su`, like Shizuku starts its server. Nothing in `/system` or the policy changes, and it stops at restart unless **Start at boot** is on. | Yes, every start |
@@ -89,12 +89,14 @@ The same run also has a `keydebounce-daemon` artifact: the daemon binary and `se
 1. Back up the system partition, and have EDL flashing ready.
 2. Get root.
 3. Open KeyDebounce → **Install fix**. It stops before changing anything if the policy isn't stock, a compile fails, or the stock compile doesn't match the phone's precompiled policy.
-4. The stock policy is now backed up as `.bak` files in `/system/etc/selinux/`; Undo restores from them. Nothing is saved to `/data` or the SD card. (Untested, see the warning at the top.)
+4. The stock policy is now backed up as `.bak` files in `/system/etc/selinux/`; Undo restores from them. Nothing is saved to `/data` or the SD card. The install ends by checking the `.bak` files are the stock policy with the stock label, then that `/system` holds what it installed. (Untested, see the warning at the top.)
 5. Remove root, or disable apps that ask for root at startup (see the warning below).
 6. Restart the phone. The main screen should say **Fix is ON**.
 
 > [!IMPORTANT]
 > **Installed with the app before v1.5? The fix never ran.** The app's root shell runs at the app's SELinux level (`s0:c512,c768`), and files it creates on `/system` inherit that level. The daemon runs at `s0`, which can't even `stat` a file at that level, so it crashed at every boot before `main()`: logcat shows `Abort message: 'unable to stat "/proc/self/exe": Permission denied'`. Rebooting doesn't help. To fix it: install v1.5 or later, **Undo**, restart, then **Install** again. v1.5 sets the labels explicitly and refuses to install if they don't come out right. To check by hand: `adb shell ls -Z /system/bin/keydebounce` must show `u:object_r:system_file:s0` with nothing after `s0`.
+>
+> **Installed with v1.9 or earlier and it said "failed" after "Installed. Reboot to start it."?** The install finished, but a last try at making `/system` read-only as the script exited was refused as busy, and that failed the script before the app's final checks ran, including the `.bak` check. Don't restart yet: install v1.10 or later, press **Install fix** → **Check install**, and restart only once it says the install checks out.
 >
 > The **Restart** button didn't work before v1.5 either, because the app's root shell isn't allowed to set `sys.powerctl`. Since v1.5 it asks the system to restart instead (`svc power reboot`), which was tested and works. Before v1.6 the D-pad couldn't reach Restart or Close on the result screen; v1.6 fixes that (not yet tested on a phone).
 
