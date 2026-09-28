@@ -26,6 +26,8 @@ public class RootActivity extends Activity {
     static final String EXTRA_COMMAND = "command";
     /** The user agreed to start Root Manager's root (it runs the exploit) for this command. */
     static final String EXTRA_START_ROOT = "start_root";
+    /** Started from the Start at boot prompt: clear its crash guard when the command ends. */
+    static final String EXTRA_FROM_BOOT_PROMPT = "from_boot_prompt";
     // Commands understood by assets/kd/kd.sh.
     static final String DRYRUN = "dryrun";
     static final String INSTALL = "install";
@@ -42,6 +44,7 @@ public class RootActivity extends Activity {
     private final StringBuilder transcript = new StringBuilder();
     private String command;
     private boolean startRoot;
+    private boolean fromBootPrompt;
     private TextView title;
     private TextView output;
     private ScrollView scroll;
@@ -65,6 +68,7 @@ public class RootActivity extends Activity {
 
         command = getIntent().getStringExtra(EXTRA_COMMAND);
         startRoot = getIntent().getBooleanExtra(EXTRA_START_ROOT, false);
+        fromBootPrompt = getIntent().getBooleanExtra(EXTRA_FROM_BOOT_PROMPT, false);
         if (!Arrays.asList(DRYRUN, INSTALL, VERIFY, UNINSTALL, OFF, ON, ROOT_START, ROOT_STOP, REBOOT, GRANT_LOGS).contains(command)) {
             finish();
             return;
@@ -107,6 +111,7 @@ public class RootActivity extends Activity {
         running = false;
         boolean ok = code == 0;
         succeeded = ok;
+        if (fromBootPrompt) BootReceiver.promptStartEnded(this, ok);
         title.setText(ok ? R.string.run_done : R.string.run_failed);
         title.setTextColor(getColor(ok ? R.color.good : R.color.bad));
         append("");
