@@ -97,8 +97,7 @@ jobs:
           For the **Sonim XP3800 on Android 8.1** only.
 
           ## What's new (not yet tested on a phone)
-          - **Start at boot starts root by itself.** With Root Manager, the app checks every 30 seconds after boot; once `su` has been there on two checks in a row, it starts root (runs the exploit once) and the filter, with no prompt. If that crashes the phone, the next boot asks first instead of trying again, so it can't turn into a reboot loop.
-          - **Restart now or later.** Turning Start at boot on asks Restart now / Later, since it only takes effect after a restart.
+          - **Restarting doesn't open a screen any more.** Restart now (after turning Start at boot on) and Restart (after Install, Check install or Undo) restart the phone in the background with a short "Restarting…" message, and say so if it didn't work.
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.

@@ -102,6 +102,7 @@
     <string name="run_root_start">Starting (root mode)</string>
     <string name="run_root_stop">Stopping (root mode)</string>
     <string name="run_reboot">Restarting…</string>
+    <string name="restart_failed">Couldn\'t restart (%s). Restart with the power key.</string>
     <string name="run_done">Done</string>
     <string name="run_failed">Failed</string>
     <string name="run_busy">Wait until it finishes.</string>

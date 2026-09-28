@@ -2,6 +2,7 @@ package io.github.anonymousfliphones.keydebounce;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -166,11 +167,37 @@ public class RootActivity extends Activity {
                 .setTitle(R.string.restart_title)
                 .setMessage(msg)
                 .setPositiveButton(R.string.restart, (d, w) -> {
-                    startActivity(new Intent(this, RootActivity.class).putExtra(EXTRA_COMMAND, REBOOT));
+                    restartInBackground(this);
                     finish();
                 })
                 .setNegativeButton(R.string.not_yet, null)
                 .show();
+    }
+
+    /**
+     * Restarts the phone (kd.sh reboot) without opening the output screen: a toast says
+     * "Restarting…", and another one explains if it didn't happen. startRoot, because with
+     * Root Manager the restart may be the first su since boot.
+     */
+    static void restartInBackground(Context c) {
+        Context app = c.getApplicationContext();
+        Handler main = new Handler(Looper.getMainLooper());
+        Toast.makeText(app, R.string.run_reboot, Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            StringBuilder out = new StringBuilder();
+            try {
+                File dir = RootShell.unpack(app);
+                RootShell.run(app, dir, REBOOT, true, line -> out.append(line).append('\n'));
+            } catch (IOException e) {
+                out.append(e.getMessage());
+            }
+            // Only reached if the phone didn't restart.
+            String last = out.toString().trim();
+            int nl = last.lastIndexOf('\n');
+            String reason = nl >= 0 ? last.substring(nl + 1) : last;
+            main.post(() -> Toast.makeText(app, app.getString(R.string.restart_failed, reason),
+                    Toast.LENGTH_LONG).show());
+        }).start();
     }
 
     /** Keeps a copy in Android/data/<package>/files, readable with adb pull. */
