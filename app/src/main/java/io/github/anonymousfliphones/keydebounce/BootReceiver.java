@@ -41,9 +41,11 @@ public class BootReceiver extends BroadcastReceiver {
             try {
                 if (PhoneStatus.installTraceOnPhone()) {
                     out.append("Skipped: the fix is installed, and root requests with it installed crash the phone.\n");
+                } else if (RootShell.rootInactive(app)) {
+                    out.append("Skipped: the phone's root isn't active after a restart, and asking for root while it's off crashes the phone. Open the root app, then use Start in the app.\n");
                 } else {
                     File dir = RootShell.unpack(app);
-                    int code = RootShell.run(dir, RootActivity.ROOT_START, line -> out.append(line).append('\n'));
+                    int code = RootShell.run(app, dir, RootActivity.ROOT_START, line -> out.append(line).append('\n'));
                     out.append("exit ").append(code).append('\n');
                 }
             } catch (IOException e) {

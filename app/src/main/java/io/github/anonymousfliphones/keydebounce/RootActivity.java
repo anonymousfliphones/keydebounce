@@ -77,7 +77,7 @@ public class RootActivity extends Activity {
             int code;
             try {
                 File dir = RootShell.unpack(this);
-                code = RootShell.run(dir, command, line -> ui.post(() -> append(line)));
+                code = RootShell.run(this, dir, command, line -> ui.post(() -> append(line)));
             } catch (IOException e) {
                 ui.post(() -> append(getString(R.string.run_unpack_failed, e.getMessage())));
                 code = RootShell.NO_ROOT;
@@ -90,7 +90,9 @@ public class RootActivity extends Activity {
     private void append(String line) {
         transcript.append(line).append('\n');
         output.append(line + "\n");
-        scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
+        // Not fullScroll(): that also moves focus to the ScrollView, which ran after
+        // finished() focused Restart/Close and left the buttons unreachable with the D-pad.
+        scroll.post(() -> scroll.scrollTo(0, output.getBottom()));
     }
 
     private void finished(int code) {
@@ -101,6 +103,8 @@ public class RootActivity extends Activity {
         append("");
         if (ok) {
             append(getString(doneMessageFor(command)));
+        } else if (code == RootShell.ROOT_INACTIVE) {
+            append(getString(R.string.run_root_inactive));
         } else if (code == RootShell.NO_ROOT) {
             append(getString(R.string.run_no_root));
         } else {

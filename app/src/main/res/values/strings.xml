@@ -67,10 +67,16 @@
     <string name="bounce_filter_open_settings">Open Accessibility settings</string>
     <string name="bounce_filter_desc">No-root fallback that only fixes contact bounce (a key registering twice from one press). It does not fix key overlap (two keys pressed close together); that still needs the root daemon. See the README on GitHub.</string>
 
-    <string name="start_now">Start now</string>
+    <string name="start_short">Start</string>
     <string name="stop">Stop</string>
-    <string name="boot_turn_on">Start at boot: turn on</string>
-    <string name="boot_turn_off">Start at boot: turn off</string>
+    <string name="boot_button">Boot…</string>
+    <string name="boot_title">Start at boot</string>
+    <string name="boot_msg">Start at boot is %1$s.\n\nWhen it\'s on, the app asks for root after each restart and starts the filter again. That only works if root is active at boot.</string>
+    <string name="boot_xp3_note">This phone\'s root turns off at every restart until you open the root app, so Start at boot will be skipped at every boot. Asking for root while it\'s off crashes the phone, so the app won\'t. Open the root app after a restart, then use Start.</string>
+    <string name="turn_on">Turn on</string>
+    <string name="turn_off">Turn off</string>
+    <string name="root_inactive_title">Root isn\'t active</string>
+    <string name="root_inactive_msg">This phone\'s root turns off at every restart. Asking for root while it\'s off crashes the phone, so nothing was run.\n\nOpen the root app to turn root on, then try again.</string>
     <string name="boot_now_on">Start at boot is on. After a restart the app asks for root and starts the filter.</string>
     <string name="boot_now_off">Start at boot is off.</string>
     <string name="on_word">on</string>
@@ -88,6 +94,7 @@
     <string name="run_done">Done</string>
     <string name="run_failed">Failed</string>
     <string name="run_busy">Wait until it finishes.</string>
+    <string name="run_root_inactive">Not run: this phone\'s root isn\'t active (it turns off at every restart), and asking for root while it\'s off crashes the phone. Nothing was changed. Open the root app, then try again.</string>
     <string name="run_no_root">No result: root wasn\'t available, was refused, or stopped partway. If there\'s no output above, nothing was changed; otherwise the output shows how far it got.</string>
     <string name="run_failed_msg">It stopped at the step shown above. Everything before that step is listed in the output.</string>
     <string name="run_unpack_failed">Couldn\'t unpack the app\'s files: %s</string>
