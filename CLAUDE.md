@@ -67,4 +67,6 @@ The app must never run `su` on its own (startup, status checks): root requests w
 - Screen dozes within 1–2 min; wake with `input keyevent 224` and check `dumpsys window | grep mCurrentFocus` before any automated input.
 - Never send backspaces blindly in the dialer: once the field is empty they hit the call log and open "delete call log?". `test/harness.sh` guards against this.
 - `pm`/`settings put` changes to IMEs and accessibility services don't rebind live on this ROM; force-stop the app or reboot, then verify with `dumpsys`.
+- Accessibility list (`enabled_accessibility_services`) is colon-separated. Never overwrite it with one entry: it holds the user's Mouse Toggle (MATVT), Button Mapper and Voice Access. Uninstalling/reinstalling the app drops `BounceFilterService` from it at the next boot; re-add and reboot. `dumpsys accessibility` must show KeyDebounce with `capabilities=8`; `capabilities=0` means the service's XML wasn't loaded (meta-data must be named `android.accessibilityservice`).
+- Bounce test without a finger: `test/bounce55.bin` via `inject_55_bounce.sh` (raw events in one write; `sendevent` is too slow for a 10 ms bounce).
 - Grep tool: use `output_mode: "content"`; the default only lists matching files.
