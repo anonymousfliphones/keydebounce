@@ -36,6 +36,15 @@ If the daemon stops for any reason, the keypad goes straight back to working nor
 
 **Tradeoff:** you can't hold two keys at once. Holding a single key (long press) still works.
 
+### Why you can't just use a standard BOOT_COMPLETED receiver (without root)
+
+To fix the key overlap issue, this daemon has to do two things that normal Android apps are strictly blocked from doing:
+
+1. Take exclusive control of the physical keypad hardware (`/dev/input`).
+2. Create a fake replacement keypad to send the filtered keystrokes to Android (`/dev/uinput`).
+
+Standard Android apps do not have permission to access these low-level device files. The permanent install method rewrites the SELinux policy specifically to grant this single daemon a permanent exception so it can run without needing root later.
+
 ### Why not an accessibility service or a different keyboard?
 
 Both would work without root, and both were considered:
@@ -90,6 +99,16 @@ If the phone is rooted with root that lets `su` use `/dev/input` and `/dev/uinpu
 If the root doesn't allow the keypad or `/dev/uinput`, the daemon exits right away and the app shows its log line. In that case use the permanent install. Starting the daemon over ADB (like Shizuku without root) can't work: the `adb shell` user can't open `/dev/uinput`.
 
 Every root command's output is saved to `/sdcard/Android/data/io.github.anonymousfliphones.keydebounce/files/<command>.log`.
+
+#### How to use the "Boot Complete" method (with root)
+
+If you do not want to touch the SELinux policy or `/system`, you don't actually need to edit the code. You can use the app's built-in root mode:
+
+1. Make sure your device is rooted (the root manager must allow `su` to access `/dev/uinput`).
+2. In the KeyDebounce app, go to **Run with root (no install)**.
+3. Toggle on **Start at boot**.
+
+When you do this, the app uses a standard boot receiver to launch the daemon via `su` once the phone finishes booting. It will ask for root permissions upon startup, and it won't make any permanent changes to your SELinux policy or `/system` partition.
 
 ## Requirements
 
