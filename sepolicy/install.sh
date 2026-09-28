@@ -16,6 +16,21 @@ trap 'mount -o ro,remount /system 2>/dev/null' EXIT
 
 hash_of() { cat "$1" $MAP | sha256sum | cut -d' ' -f1; }
 
+# New files take the creating shell's MLS level, and the app's root shell runs at
+# the app's categories (s0:c512,c768). The daemon runs at s0 and SELinux won't let
+# it even stat a file at that level: the linker aborts with 'unable to stat
+# "/proc/self/exe"' before main(). So set the exact labels and check them.
+relabel() {
+    ctx=$1; shift
+    chcon "$ctx" "$@"
+    for f in "$@"; do
+        case "$(ls -Z "$f")" in
+            "$ctx "*) ;;
+            *) echo "Wrong SELinux label on $f: $(ls -Z "$f"). Refusing to install the policy."; exit 1 ;;
+        esac
+    done
+}
+
 # Build from stock: the .bak if an earlier install made one, otherwise the live file.
 if [ -f $CIL.bak ]; then STOCK=$CIL.bak; STOCK_SHA=$SHA.bak; else STOCK=$CIL; STOCK_SHA=$SHA; fi
 if [ "$(hash_of $STOCK)" != "$(cat $STOCK_SHA)" ]; then
@@ -58,6 +73,9 @@ chmod 755 /system/bin/keydebounce
 cp $W/keydebounce.rc /system/etc/init/keydebounce.rc
 chown root:root /system/etc/init/keydebounce.rc
 chmod 644 /system/etc/init/keydebounce.rc
+# Before the policy changes, so a failure here leaves the phone booting stock.
+relabel u:object_r:system_file:s0 /system/bin/keydebounce /system/etc/init/keydebounce.rc
+relabel u:object_r:sepolicy_file:s0 $CIL.bak $SHA.bak
 cp $W/plat_sepolicy.cil $CIL
 printf '%s\n' "$NEWHASH" > $SHA
 sync

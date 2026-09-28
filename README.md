@@ -96,6 +96,11 @@ The same run also has a `keydebounce-daemon` artifact: the daemon binary and `se
 5. Remove root, or disable apps that ask for root at startup (see the warning below).
 6. Restart the phone. The main screen should say **Fix is ON**.
 
+> [!IMPORTANT]
+> **Installed with the app before v1.5? The fix never ran.** The app's root shell runs at the app's SELinux level (`s0:c512,c768`), and files it creates on `/system` inherit that level. The daemon runs at `s0`, which can't even `stat` a file at that level, so it crashed at every boot before `main()`: logcat shows `Abort message: 'unable to stat "/proc/self/exe": Permission denied'`. Rebooting doesn't help. To fix it: install v1.5 or later, **Undo**, restart, then **Install** again. v1.5 sets the labels explicitly and refuses to install if they don't come out right. To check by hand: `adb shell ls -Z /system/bin/keydebounce` must show `u:object_r:system_file:s0` with nothing after `s0`.
+>
+> The **Restart** button didn't work before v1.5 either, because the app's root shell isn't allowed to set `sys.powerctl`. It now asks the system to restart instead (`svc power reboot`). This hasn't been tested yet; if it still does nothing, restart with the power key, and `reboot.log` (see below) shows what happened.
+
 ### Root mode (no install)
 
 If the phone is rooted with root that lets `su` use `/dev/input` and `/dev/uinput` (Magisk does), **Run with root (no install)** → **Start now** runs the filter with no changes to `/system` or the SELinux policy. **Stop** ends it, and a restart ends it too. To start it after every restart, turn on **Start at boot**. The app then asks for root once the phone has booted. That boot attempt's output is saved as `boot-start.log`, next to the other logs listed below.
