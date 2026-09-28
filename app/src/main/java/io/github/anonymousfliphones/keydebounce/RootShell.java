@@ -1,10 +1,12 @@
 package io.github.anonymousfliphones.keydebounce;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +24,40 @@ final class RootShell {
 
     /** Exit code when su couldn't be started or refused the command. */
     static final int NO_ROOT = -1;
+    /** Exit code when su wasn't called because the XP3800 root isn't active. */
+    static final int ROOT_INACTIVE = -2;
+
+    /**
+     * The XP3800 root turns itself off at every restart. Running its su while it's off
+     * crashes the phone within a second (it falls back to the root exploit), and at boot
+     * that becomes a reboot loop.
+     */
+    static final String XP3_ROOT = "com.flipphoneguy.root.xp3";
+
+    /**
+     * True when the XP3800 root is installed but not active, so su must not be run.
+     * While it's active, the root makes the untrusted_app SELinux domain permissive, so
+     * this app can read the policy file; while it's off, SELinux refuses. Other roots
+     * aren't checked.
+     */
+    static boolean rootInactive(Context c) {
+        if (!isXp3RootInstalled(c)) return false;
+        try (FileInputStream in = new FileInputStream(PhoneStatus.POLICY)) {
+            in.read();
+            return false;
+        } catch (IOException e) {
+            return true;
+        }
+    }
+
+    static boolean isXp3RootInstalled(Context c) {
+        try {
+            c.getPackageManager().getPackageInfo(XP3_ROOT, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
 
     private static final String EXIT_MARK = "__kd_exit=";
 
@@ -46,9 +82,10 @@ final class RootShell {
     /**
      * Runs "sh kd.sh command dir" through su, passing each output line to out.
      * Blocks until it finishes; call from a background thread. Returns kd.sh's
-     * exit code, or NO_ROOT.
+     * exit code, NO_ROOT, or ROOT_INACTIVE (su not called).
      */
-    static int run(File dir, String command, Output out) {
+    static int run(Context c, File dir, String command, Output out) {
+        if (rootInactive(c)) return ROOT_INACTIVE;
         Process p;
         try {
             p = new ProcessBuilder("su").redirectErrorStream(true).start();

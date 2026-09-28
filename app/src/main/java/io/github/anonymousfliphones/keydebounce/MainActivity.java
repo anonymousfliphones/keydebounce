@@ -190,16 +190,29 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
                     .setTitle(R.string.root_mode_title)
                     .setMessage(getString(R.string.root_mode_msg,
                             getString(atBoot ? R.string.on_word : R.string.off_word)))
-                    .setPositiveButton(R.string.start_now, (d, w) -> run(RootActivity.ROOT_START))
+                    // Three buttons share one row on a 240 px screen, so the labels stay short.
+                    .setPositiveButton(R.string.start_short, (d, w) -> run(RootActivity.ROOT_START))
                     .setNeutralButton(R.string.stop, (d, w) -> run(RootActivity.ROOT_STOP))
-                    .setNegativeButton(atBoot ? R.string.boot_turn_off : R.string.boot_turn_on, (d, w) -> {
-                        BootReceiver.setStartAtBoot(this, !atBoot);
-                        Toast.makeText(this, atBoot ? R.string.boot_now_off : R.string.boot_now_on,
-                                Toast.LENGTH_LONG).show();
-                        refresh();
-                    })
+                    .setNegativeButton(R.string.boot_button, (d, w) -> onStartAtBoot())
                     .show();
         }
+    }
+
+    private void onStartAtBoot() {
+        boolean atBoot = BootReceiver.startAtBoot(this);
+        String text = getString(R.string.boot_msg, getString(atBoot ? R.string.on_word : R.string.off_word));
+        if (RootShell.isXp3RootInstalled(this)) text += "\n\n" + getString(R.string.boot_xp3_note);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.boot_title)
+                .setMessage(text)
+                .setPositiveButton(atBoot ? R.string.turn_off : R.string.turn_on, (d, w) -> {
+                    BootReceiver.setStartAtBoot(this, !atBoot);
+                    Toast.makeText(this, atBoot ? R.string.boot_now_off : R.string.boot_now_on,
+                            Toast.LENGTH_LONG).show();
+                    refresh();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     /** No-root, bounce-only fallback. Untested: see BounceFilterService and the README. */
@@ -214,6 +227,10 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
     }
 
     private void run(String command) {
+        if (RootShell.rootInactive(this)) {
+            message(R.string.root_inactive_title, getString(R.string.root_inactive_msg));
+            return;
+        }
         startActivity(new Intent(this, RootActivity.class).putExtra(RootActivity.EXTRA_COMMAND, command));
     }
 

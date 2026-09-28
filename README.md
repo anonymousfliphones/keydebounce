@@ -96,11 +96,14 @@ The same run also has a `keydebounce-daemon` artifact: the daemon binary and `se
 > [!IMPORTANT]
 > **Installed with the app before v1.5? The fix never ran.** The app's root shell runs at the app's SELinux level (`s0:c512,c768`), and files it creates on `/system` inherit that level. The daemon runs at `s0`, which can't even `stat` a file at that level, so it crashed at every boot before `main()`: logcat shows `Abort message: 'unable to stat "/proc/self/exe": Permission denied'`. Rebooting doesn't help. To fix it: install v1.5 or later, **Undo**, restart, then **Install** again. v1.5 sets the labels explicitly and refuses to install if they don't come out right. To check by hand: `adb shell ls -Z /system/bin/keydebounce` must show `u:object_r:system_file:s0` with nothing after `s0`.
 >
-> The **Restart** button didn't work before v1.5 either, because the app's root shell isn't allowed to set `sys.powerctl`. It now asks the system to restart instead (`svc power reboot`). This hasn't been tested yet; if it still does nothing, restart with the power key, and `reboot.log` (see below) shows what happened.
+> The **Restart** button didn't work before v1.5 either, because the app's root shell isn't allowed to set `sys.powerctl`. Since v1.5 it asks the system to restart instead (`svc power reboot`), which was tested and works. Before v1.6 the D-pad couldn't reach Restart or Close on the result screen; v1.6 fixes that (not yet tested on a phone).
+
+> [!WARNING]
+> **The XP3800 root (`com.flipphoneguy.root.xp3`) turns off at every restart.** Its "root is installed" only means `/system/bin/su` is there; root is off until you open the root app again. Asking for root while it's off crashes the phone within a second, and with **Start at boot** on that happened at every boot (a reboot loop). Since v1.6 the app checks first and won't ask for root while it's off: root actions say "Root isn't active", and Start at boot is skipped at boot. With this root, open the root app after each restart, then use **Start**.
 
 ### Root mode (no install)
 
-If the phone is rooted with root that lets `su` use `/dev/input` and `/dev/uinput` (Magisk does), **Run with root (no install)** → **Start now** runs the filter with no changes to `/system` or the SELinux policy. **Stop** ends it, and a restart ends it too. To start it after every restart, turn on **Start at boot**. The app then asks for root once the phone has booted. That boot attempt's output is saved as `boot-start.log`, next to the other logs listed below.
+If the phone is rooted with root that lets `su` use `/dev/input` and `/dev/uinput` (Magisk does), **Run with root (no install)** → **Start** runs the filter with no changes to `/system` or the SELinux policy. **Stop** ends it, and a restart ends it too. To start it after every restart, use **Boot…** → **Turn on** (Start at boot). The app then asks for root once the phone has booted, which only works if root is active at boot (not with the XP3800 root, see the warning above). That boot attempt's output is saved as `boot-start.log`, next to the other logs listed below.
 
 If the root doesn't allow the keypad or `/dev/uinput`, the daemon exits right away and the app shows its log line. In that case use the permanent install. Starting the daemon over ADB (like Shizuku without root) can't work: the `adb shell` user can't open `/dev/uinput`.
 
@@ -112,9 +115,9 @@ If you do not want to touch the SELinux policy or `/system`, you don't actually 
 
 1. Make sure your device is rooted (the root manager must allow `su` to access `/dev/uinput`).
 2. In the KeyDebounce app, go to **Run with root (no install)**.
-3. Toggle on **Start at boot**.
+3. Choose **Boot…** → **Turn on**.
 
-When you do this, the app uses a standard boot receiver to launch the daemon via `su` once the phone finishes booting. It will ask for root permissions upon startup, and it won't make any permanent changes to your SELinux policy or `/system` partition.
+When you do this, the app uses a standard boot receiver to launch the daemon via `su` once the phone finishes booting. This needs root that is active at boot; with the XP3800 root it's skipped (see the warning above). It will ask for root permissions upon startup, and it won't make any permanent changes to your SELinux policy or `/system` partition.
 
 ### Bounce filter (no root, accessibility service)
 
