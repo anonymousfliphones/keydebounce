@@ -92,26 +92,16 @@ jobs:
           > **Use at your own risk.** The permanent install changes the phone's SELinux policy and other low-level parts, and can leave it unable to boot. The developers take no responsibility for damage or data loss. This comes with no warranty (GPL-3.0, sections 15 and 16). Read the warning in the README first.
 
           > [!WARNING]
-          > **The on-phone backup has never been tested.** Install backs up the stock policy as `.bak` files in `/system/etc/selinux`, and Undo restores from them. Neither has been run on a phone yet. Keep your own copy of the stock policy and a full system backup.
-
-          > [!WARNING]
           > **Only built and tested on the Verizon XP3800 variant.** Install now refuses to proceed if this device's compiled stock policy doesn't match its own `precompiled_sepolicy` — a real check, but not a guarantee on every possible variant difference. See the README.
 
           For the **Sonim XP3800 on Android 8.1** only.
 
-          New in this release (not yet tested on a phone): **Start at boot runs by itself.** After a restart the app waits 2 minutes, then checks every 30 seconds, without asking for root, whether root is on, and starts the filter once root has been on for two checks in a row. With the XP3800 root, open the root app after a restart and the filter starts about a minute later; nothing to tap in KeyDebounce. KeyDebounce never touches the root app.
+          ## What's new
+          **Start at boot runs by itself** (not yet tested on a phone):
+          - With a root that's on at boot (Magisk), the filter starts right after boot.
+          - With the XP3800 root, which is off after every restart, the app checks every 30 seconds from boot, without asking for root, whether root is on. Once root has been on for two checks in a row it starts the filter: 30 to 60 seconds after you open the root app, with nothing to tap in KeyDebounce. KeyDebounce never touches the root app.
 
-          In v1.6 (not yet tested on a phone):
-          - **No more crash when root is off.** The XP3800 root turns off at every restart, and asking for root while it's off crashes the phone; with Start at boot on, that was a reboot loop. The app now checks first: root actions say "Root isn't active" instead, and at boot it waits instead.
-          - **Restart and Close can be reached with the D-pad** on the result screen. Auto-scrolling the output kept taking focus away from the buttons.
-          - **Root mode buttons fit the screen:** Start, Stop, Boot… (Start at boot moved into its own dialog).
-
-          Since v1.5: installs made with the app actually run (files get the right SELinux labels), and Restart works (`svc power reboot`). **If you installed with a build before v1.5:** install this one, Undo, restart, then Install again.
-
-          Also in this release: the no-root **bounce filter** now works. In v1.3 it never received key presses because of a manifest bug. Tested on a Verizon XP3800: an injected bounce went from "55" to "5", normal typing is unchanged, and it runs alongside Mouse Toggle with no crashes. It only fixes contact bounce, not key overlap ("566"), which still needs the root daemon or the permanent install.
-
-          If you enabled the v1.3 filter with the README's old command, check your accessibility list: that command replaced the whole list and turned off other services such as Mouse Toggle. Use the new command in the README, which adds to the list, then restart the phone. Updating the app removes the filter from the list, so add it again after installing this build.
-
+          ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.
           - `keydebounce-daemon-*.zip`: the daemon binary and install scripts, for installing by hand.
 

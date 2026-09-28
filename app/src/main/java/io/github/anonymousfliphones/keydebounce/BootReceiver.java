@@ -18,13 +18,16 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Root mode's "Start at boot". Two minutes after a restart it starts checking, every
- * 30 seconds and without su, whether root is active, and starts the daemon through su
- * (kd.sh rootstart) once root has been active on two checks in a row. The XP3800 root
- * is off after every restart until the root app turns it on, and su while it's off
- * crashes the phone; the second check keeps su away from a root app that is still
- * turning root on. Never asks for root when the permanent install is present: with
- * its policy loaded, root requests crashed the phone and caused reboot loops.
+ * Root mode's "Start at boot": starts the daemon through su (kd.sh rootstart) after a
+ * restart. With a root that is on at boot (Magisk) it starts right away.
+ *
+ * With the XP3800 root it waits: that root is off after every restart until the root
+ * app turns it on, and su while it's off crashes the phone. So from boot it checks every
+ * 30 seconds, without su, and starts once root has been on for two checks in a row; the
+ * second check keeps su away from a root app still turning root on.
+ *
+ * Never asks for root when the permanent install is present: with its policy loaded,
+ * root requests crashed the phone and caused reboot loops.
  */
 public class BootReceiver extends BroadcastReceiver {
     private static final String PREFS = "settings";
@@ -32,7 +35,6 @@ public class BootReceiver extends BroadcastReceiver {
     private static final String ROOT_SEEN = "boot_root_seen";
     private static final String WAITING_LOGGED = "boot_waiting_logged";
     private static final String ACTION_CHECK = "io.github.anonymousfliphones.keydebounce.BOOT_CHECK";
-    private static final long FIRST_CHECK_MS = 2 * 60 * 1000;
     private static final long RECHECK_MS = 30 * 1000;
 
     static boolean startAtBoot(Context c) {
@@ -49,9 +51,16 @@ public class BootReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
             if (!startAtBoot(app)) return;
-            prefs(app).edit().putBoolean(ROOT_SEEN, false).putBoolean(WAITING_LOGGED, false).apply();
-            log(app, false, "Restarted. Checking for root in 2 minutes.");
-            schedule(app, FIRST_CHECK_MS);
+            if (PhoneStatus.installTraceOnPhone()) {
+                log(app, false, "Skipped: the fix is installed, and root requests with it installed crash the phone.");
+            } else if (RootShell.isXp3RootInstalled(app)) {
+                prefs(app).edit().putBoolean(ROOT_SEEN, false).putBoolean(WAITING_LOGGED, false).apply();
+                log(app, false, "Restarted. XP3800 root: checking for root every 30 seconds.");
+                check(app);
+            } else {
+                log(app, false, "Restarted.");
+                startNow(app);
+            }
         } else if (ACTION_CHECK.equals(action)) {
             check(app);
         }
@@ -85,6 +94,10 @@ public class BootReceiver extends BroadcastReceiver {
             schedule(app, RECHECK_MS);
             return;
         }
+        startNow(app);
+    }
+
+    private void startNow(Context app) {
         PendingResult pending = goAsync();
         new Thread(() -> {
             StringBuilder out = new StringBuilder("Starting the filter:\n");
