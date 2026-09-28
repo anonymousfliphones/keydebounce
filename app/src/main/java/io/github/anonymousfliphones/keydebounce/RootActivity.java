@@ -23,6 +23,8 @@ import java.util.Arrays;
 /** Runs one kd.sh command as root and shows its output live. */
 public class RootActivity extends Activity {
     static final String EXTRA_COMMAND = "command";
+    /** The user agreed to start Root Manager's root (it runs the exploit) for this command. */
+    static final String EXTRA_START_ROOT = "start_root";
     // Commands understood by assets/kd/kd.sh.
     static final String DRYRUN = "dryrun";
     static final String INSTALL = "install";
@@ -38,6 +40,7 @@ public class RootActivity extends Activity {
     private final Handler ui = new Handler(Looper.getMainLooper());
     private final StringBuilder transcript = new StringBuilder();
     private String command;
+    private boolean startRoot;
     private TextView title;
     private TextView output;
     private ScrollView scroll;
@@ -60,6 +63,7 @@ public class RootActivity extends Activity {
         close.setOnClickListener(v -> close());
 
         command = getIntent().getStringExtra(EXTRA_COMMAND);
+        startRoot = getIntent().getBooleanExtra(EXTRA_START_ROOT, false);
         if (!Arrays.asList(DRYRUN, INSTALL, VERIFY, UNINSTALL, OFF, ON, ROOT_START, ROOT_STOP, REBOOT, GRANT_LOGS).contains(command)) {
             finish();
             return;
@@ -80,7 +84,7 @@ public class RootActivity extends Activity {
             int code;
             try {
                 File dir = RootShell.unpack(this);
-                code = RootShell.run(this, dir, command, line -> ui.post(() -> append(line)));
+                code = RootShell.run(this, dir, command, startRoot, line -> ui.post(() -> append(line)));
             } catch (IOException e) {
                 ui.post(() -> append(getString(R.string.run_unpack_failed, e.getMessage())));
                 code = RootShell.NO_ROOT;
@@ -107,8 +111,8 @@ public class RootActivity extends Activity {
         append("");
         if (ok) {
             append(getString(doneMessageFor(command)));
-        } else if (code == RootShell.ROOT_INACTIVE) {
-            append(getString(R.string.run_root_inactive));
+        } else if (code == RootShell.ROOT_NOT_STARTED) {
+            append(getString(R.string.run_root_not_started));
         } else if (code == RootShell.NO_ROOT) {
             append(getString(R.string.run_no_root));
         } else {
@@ -124,6 +128,26 @@ public class RootActivity extends Activity {
         } else {
             close.requestFocus();
         }
+    }
+
+    /**
+     * Runs command as root. If Root Manager's root hasn't started since the restart, asks
+     * first: starting it runs the kernel exploit, which can crash the phone.
+     */
+    static void launch(Activity a, String command) {
+        Intent run = new Intent(a, RootActivity.class).putExtra(EXTRA_COMMAND, command);
+        if (!RootShell.rootNotStarted(a)) {
+            a.startActivity(run);
+            return;
+        }
+        String msg = a.getString(R.string.root_not_started_msg);
+        if (PhoneStatus.installTraceOnPhone()) msg += "\n\n" + a.getString(R.string.root_not_started_installed);
+        new AlertDialog.Builder(a)
+                .setTitle(R.string.root_not_started_title)
+                .setMessage(msg)
+                .setPositiveButton(R.string.start_root, (d, w) -> a.startActivity(run.putExtra(EXTRA_START_ROOT, true)))
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     private void close() {
