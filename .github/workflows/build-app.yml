@@ -97,8 +97,7 @@ jobs:
           For the **Sonim XP3800 on Android 8.1** only.
 
           ## What's new (not yet tested on a phone)
-          - **Install and Undo no longer report a false "failed".** Both finished their work, but the last step (making /system read-only again) was refused as "busy", so the app said "failed", warned against restarting, and offered no Restart button. That step is now a note, a restart takes care of it, and you get Restart as normal. A real failure still shows as failed: the app checks the result.
-          - **The app can grant itself log access with root.** The correction log needs READ_LOGS, which apps can't ask for with a normal prompt. On first open (if root is present) the app offers to grant it through root, and the Correction log screen has a Grant with root button. The app closes afterwards so the permission takes effect; open it again.
+          - **Install and Undo really show Restart now.** 1.9 fixed half of the false "failed": as the script exited it still tried once more to make /system read-only, and when that was refused as "busy" the whole script counted as failed, even though it had already printed "Reboot". That retry can no longer fail the script, so a finished Install or Undo shows Done and Restart. A real failure still shows as failed: the app checks the result.
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.
