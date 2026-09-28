@@ -9,6 +9,9 @@ Fixes double key presses on the **Sonim XP3800** keypad (Android 8.1).
 >
 > **The developers take no responsibility** for damaged or unbootable phones, lost data, or anything else that results from using this project. It is provided "as is", without warranty of any kind. See [LICENSE](LICENSE), sections 15 and 16. Don't use it unless you have a full backup and understand how to recover.
 
+> [!WARNING]
+> **The on-phone `.bak` backup and restore have never been tested.** The `.bak` backup in `sepolicy/install.sh` and the restore in `sepolicy/uninstall.sh` were written after the only real install, and have never been run on a phone. That install used an earlier script that kept the stock policy backup off the phone. Keep your own copy of the stock policy files and a full system backup before relying on them.
+
 ## The problem
 
 On every XP3800, typing quickly produces doubled digits and letters in every app. Two separate causes were confirmed on the device:
@@ -98,11 +101,22 @@ Every root command's output is saved to `/sdcard/Android/data/io.github.anonymou
 
 Android enforces SELinux at boot on this phone, so the daemon gets its own small security rule. It's added to the phone's policy, and Android recompiles the policy at every boot.
 
-1. Back up the system partition and `/system/etc/selinux/plat_sepolicy.cil` + `plat_and_mapping_sepolicy.cil.sha256`.
-2. Copy `keydebounce`, `sepolicy/keydebounce.cil`, `sepolicy/keydebounce.rc`, `sepolicy/dryrun.sh`, and `sepolicy/install.sh` to `/data/local/tmp/kd_dry/` on the phone.
-3. As root, run `sh /data/local/tmp/kd_dry/dryrun.sh`. Both compiles must print `exit=0`. If not, stop; nothing has been changed.
-4. As root, run `sh /data/local/tmp/kd_dry/install.sh`.
+1. Back up the system partition, for EDL recovery if the phone ever fails to boot.
+2. Copy `keydebounce`, `sepolicy/keydebounce.cil`, `sepolicy/keydebounce.rc`, `sepolicy/dryrun.sh`, and `sepolicy/install.sh` to `/data/local/tmp/kd_dry/` on the phone. These are only the install inputs; nothing is backed up there.
+3. As root, run `sh /data/local/tmp/kd_dry/dryrun.sh`. Both compiles must print `exit=0`, and the baseline must match the phone's prebuilt policy. If not, stop; nothing has been changed.
+4. As root, run `sh /data/local/tmp/kd_dry/install.sh`. It checks the stock policy against its hash, compiles once more, and stops before touching `/system` if anything fails.
 5. Reboot. Check it's running with `adb shell ps -A -Z | grep keydebounce` (you should see `u:r:keydebounce:s0`).
+
+The installer backs up the two stock policy files **on the phone, next to the originals**:
+
+| Backup | Original |
+| --- | --- |
+| `/system/etc/selinux/plat_sepolicy.cil.bak` | `plat_sepolicy.cil` |
+| `/system/etc/selinux/plat_and_mapping_sepolicy.cil.sha256.bak` | `plat_and_mapping_sepolicy.cil.sha256` |
+
+**Untested:** this backup step has never been run on a phone. Also copy both files to your PC before installing.
+
+They're made on the first install only and never overwritten, so they always hold the stock files. Reinstalling rebuilds from the `.bak` copy, so the rule is never added twice. Android ignores `.bak` files, and they survive factory resets because they're in `/system`.
 
 > **Warning: remove root, or disable apps that ask for root at startup (such as Lucky Patcher), before rebooting.**
 > With this installed, the Root Manager root exploit crashed the phone on almost every attempt during testing. An app that requests root at boot then puts the phone into a reboot loop.
@@ -120,7 +134,16 @@ Delete that file and reboot to turn it back on.
 
 ## Uninstall
 
-Needs root. In the app: **Undo (remove fix)**, then restart. By hand: copy the backed-up stock policy files to `/data/local/tmp/kd_dry/stock/`, run `sepolicy/uninstall.sh` as root, then reboot.
+Needs root. In the app: **Undo (remove fix)**, then restart. By hand: copy `sepolicy/uninstall.sh` to the phone, run it as root, then reboot.
+
+`uninstall.sh` restores from the first stock backup it finds:
+
+1. The `.bak` files in `/system/etc/selinux/`, made by the current installer.
+2. Otherwise, `/data/local/tmp/kd_dry/stock/`. Phones installed before the `.bak` backup existed only have this (put the two stock files there with `adb push`).
+
+It checks the backup against its hash before changing anything, puts the stock files back, and deletes the daemon and its startup entry. The phone then goes back to loading its prebuilt policy, exactly as before the install.
+
+**Untested:** the `.bak` restore has never been run on a phone. If it fails, restore the two stock files from your own copy, or flash the system backup over EDL.
 
 If the phone won't boot, flash the system backup over EDL.
 
