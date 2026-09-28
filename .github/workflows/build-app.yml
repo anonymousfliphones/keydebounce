@@ -99,8 +99,10 @@ jobs:
 
           For the **Sonim XP3800 on Android 8.1** only.
 
-          New in this release (not yet tested on a phone):
-          - **No more crash when root is off.** The XP3800 root turns off at every restart, and asking for root while it's off crashes the phone; with Start at boot on, that was a reboot loop. The app now checks first: root actions say "Root isn't active" instead, and Start at boot is skipped.
+          New in this release (not yet tested on a phone): **Start at boot runs by itself.** After a restart the app waits 2 minutes, then checks every 30 seconds, without asking for root, whether root is on, and starts the filter once root has been on for two checks in a row. With the XP3800 root, open the root app after a restart and the filter starts about a minute later; nothing to tap in KeyDebounce. KeyDebounce never touches the root app.
+
+          In v1.6 (not yet tested on a phone):
+          - **No more crash when root is off.** The XP3800 root turns off at every restart, and asking for root while it's off crashes the phone; with Start at boot on, that was a reboot loop. The app now checks first: root actions say "Root isn't active" instead, and at boot it waits instead.
           - **Restart and Close can be reached with the D-pad** on the result screen. Auto-scrolling the output kept taking focus away from the buttons.
           - **Root mode buttons fit the screen:** Start, Stop, Boot… (Start at boot moved into its own dialog).
 
