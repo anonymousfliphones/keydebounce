@@ -14,16 +14,15 @@ trap 'mount -o ro,remount /system 2>/dev/null' EXIT
 
 hash_of() { cat "$1" $MAP | sha256sum | cut -d' ' -f1; }
 
-if [ -f $CIL.bak ] && [ -f $SHA.bak ]; then
+verifies() { [ -f "$1" ] && [ -f "$2" ] && [ "$(hash_of "$1")" = "$(cat "$2")" ]; }
+
+if verifies $CIL.bak $SHA.bak; then
     SRC=bak; SRC_CIL=$CIL.bak; SRC_SHA=$SHA.bak
-elif [ -f $STAGED/plat_sepolicy.cil ] && [ -f $STAGED/plat_and_mapping_sepolicy.cil.sha256 ]; then
+elif verifies $STAGED/plat_sepolicy.cil $STAGED/plat_and_mapping_sepolicy.cil.sha256; then
     SRC=staged; SRC_CIL=$STAGED/plat_sepolicy.cil; SRC_SHA=$STAGED/plat_and_mapping_sepolicy.cil.sha256
+    [ -f $CIL.bak ] && echo "note: the .bak files don't verify; using $STAGED"
 else
-    echo "No stock policy backup: no .bak files in $S and nothing in $STAGED. Nothing changed."
-    exit 1
-fi
-if [ "$(hash_of $SRC_CIL)" != "$(cat $SRC_SHA)" ]; then
-    echo "The backup in $SRC_CIL doesn't match its hash file. Nothing changed."
+    echo "No stock policy backup that verifies (checked $S/*.bak and $STAGED). Nothing changed."
     exit 1
 fi
 echo "restoring from: $SRC_CIL"
@@ -36,6 +35,7 @@ if [ $SRC = bak ]; then
 else
     cp $SRC_CIL $CIL
     cp $SRC_SHA $SHA
+    rm -f $CIL.bak $SHA.bak
 fi
 rm -f /system/bin/keydebounce /system/etc/init/keydebounce.rc
 sync

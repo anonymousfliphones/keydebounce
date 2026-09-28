@@ -79,7 +79,7 @@ The same run also has a `keydebounce-daemon` artifact: the daemon binary and `se
 1. Back up the system partition, and have EDL flashing ready.
 2. Get root.
 3. Open KeyDebounce → **Install fix**. It stops before changing anything if the policy isn't stock, a compile fails, or the stock compile doesn't match the phone's precompiled policy.
-4. Copy `/sdcard/keydebounce-backup` to your computer. Undo needs it.
+4. The stock policy is now backed up as `.bak` files in `/system/etc/selinux/`; Undo restores from them. Nothing is saved to `/data` or the SD card. (Untested, see the warning at the top.)
 5. Remove root, or disable apps that ask for root at startup (see the warning below).
 6. Restart the phone. The main screen should say **Fix is ON**.
 
