@@ -10,9 +10,6 @@ Fixes double key presses on the **Sonim XP3800 Verizon Variant** keypad (Android
 > **The developers take no responsibility** for damaged or unbootable phones, lost data, or anything else that results from using this project. It is provided "as is", without warranty of any kind. See [LICENSE](LICENSE), sections 15 and 16. Don't use it unless you have a full backup and understand how to recover.
 
 > [!WARNING]
-> **The on-phone `.bak` backup and restore have never been tested.** The `.bak` backup in `sepolicy/install.sh` and the restore in `sepolicy/uninstall.sh` were written after the only real install, and have never been run on a phone. That install used an earlier script that kept the stock policy backup off the phone. Keep your own copy of the stock policy files and a full system backup before relying on them.
-
-> [!WARNING]
 > **Only built and tested on the Verizon XP3800 variant.** Other carriers/firmware variants of the XP3800 almost certainly ship a different base SELinux policy, and `keydebounce.cil` was written against Verizon's. `sepolicy/install.sh` now refuses to proceed if this device's compiled stock policy doesn't match its own `/vendor/etc/selinux/precompiled_sepolicy` (the same check `dryrun.sh` reports, but enforced as a hard stop instead of an FYI line) — so an install on a mismatched variant should fail cleanly rather than half-apply. That check isn't a guarantee: it can only catch a policy that's structurally different, not one that's different in some subtler way that still compiles. Don't try this on a non-Verizon variant without a full system backup and EDL recovery ready.
 
 ## The problem
