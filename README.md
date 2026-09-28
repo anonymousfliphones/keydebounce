@@ -69,6 +69,7 @@ KeyDebounce is an Android app that installs, removes and checks the fix on the p
 | Undo (remove fix) | Restores the stock policy from the backup and removes the daemon | Yes |
 | Turn off / on | Shows the adb commands for the off switch. With root it can switch now, without a restart. | Only for "now" |
 | Run with root (no install) | Starts the daemon through `su`, like Shizuku starts its server. Nothing in `/system` or the policy changes, and it stops at restart unless **Start at boot** is on. | Yes, every start |
+| Bounce filter (no root) | Shows the adb commands to turn on an accessibility-service fallback for phones with no root at all. **Untested.** Only fixes contact bounce, not key overlap — see below. | No |
 | Key tester | Lists every key press and release with timing, and flags overlaps, fast repeats (bounce) and double presses | No |
 | Correction log | Counts the overlap and bounce corrections from logcat | No, but needs a one-time adb grant |
 
@@ -112,6 +113,31 @@ If you do not want to touch the SELinux policy or `/system`, you don't actually 
 3. Toggle on **Start at boot**.
 
 When you do this, the app uses a standard boot receiver to launch the daemon via `su` once the phone finishes booting. It will ask for root permissions upon startup, and it won't make any permanent changes to your SELinux policy or `/system` partition.
+
+### Bounce filter (no root, accessibility service) — untested
+
+> [!WARNING]
+> **Untested.** `BounceFilterService` has not been run on a phone yet. It's added here because the mechanism is straightforward and well-documented (see below), not because it's been verified end to end.
+
+For phones with no root at all, `BounceFilterService` is a fallback that only fixes **contact bounce** (5 → "55"), by having Android itself drop the ghost DOWN+UP pair before it reaches any app. It does **not** fix **key overlap** (5,6 → "566"), which is the main problem this project exists for — that fix needs `INJECT_EVENTS` to synthesize a release event that never happened, and normal apps (accessibility services included) can't get that permission. See ["Why not an accessibility service or a different keyboard?"](#why-not-an-accessibility-service-or-a-different-keyboard) above for why.
+
+It can't be turned on from inside the app (Android doesn't let an app enable its own accessibility service). Turn it on from a computer, once:
+
+```
+adb shell settings put secure enabled_accessibility_services io.github.anonymousfliphones.keydebounce/io.github.anonymousfliphones.keydebounce.BounceFilterService
+adb shell settings put secure accessibility_enabled 1
+```
+
+If you already use another accessibility service on this phone, don't run those two commands as-is — they replace the whole list. Add the service to the existing comma-separated list instead, or turn it on by hand in Settings ▸ Accessibility.
+
+To turn it off: Settings ▸ Accessibility ▸ KeyDebounce, or from a computer:
+
+```
+adb shell settings put secure enabled_accessibility_services ""
+adb shell settings put secure accessibility_enabled 0
+```
+
+(again, only safe as a blanket command if this is the only accessibility service enabled).
 
 ## Requirements
 
