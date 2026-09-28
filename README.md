@@ -69,7 +69,7 @@ KeyDebounce is an Android app that installs, removes and checks the fix on the p
 | Undo (remove fix) | Restores the stock policy from the backup and removes the daemon | Yes |
 | Turn off / on | Shows the adb commands for the off switch. With root it can switch now, without a restart. | Only for "now" |
 | Run with root (no install) | Starts the daemon through `su`, like Shizuku starts its server. Nothing in `/system` or the policy changes, and it stops at restart unless **Start at boot** is on. | Yes, every start |
-| Bounce filter (no root) | Shows the adb commands to turn on an accessibility-service fallback for phones with no root at all. **Untested.** Only fixes contact bounce, not key overlap — see below. | No |
+| Bounce filter (no root) | Shows the adb commands to turn on an accessibility-service fallback for phones with no root at all. Tested: fixes contact bounce, not key overlap — see below. | No |
 | Key tester | Lists every key press and release with timing, and flags overlaps, fast repeats (bounce) and double presses | No |
 | Correction log | Counts the overlap and bounce corrections from logcat | No, but needs a one-time adb grant |
 
@@ -114,30 +114,41 @@ If you do not want to touch the SELinux policy or `/system`, you don't actually 
 
 When you do this, the app uses a standard boot receiver to launch the daemon via `su` once the phone finishes booting. It will ask for root permissions upon startup, and it won't make any permanent changes to your SELinux policy or `/system` partition.
 
-### Bounce filter (no root, accessibility service) — untested
+### Bounce filter (no root, accessibility service)
 
-> [!WARNING]
-> **Untested.** `BounceFilterService` has not been run on a phone yet. It's added here because the mechanism is straightforward and well-documented (see below), not because it's been verified end to end.
+**Tested on a Verizon XP3800 (v1.3 with the manifest fix from PR #9),** using `test/harness.sh` in the dialer:
+
+| Pattern | Filter off | Filter on |
+| --- | --- | --- |
+| Bounce (5 + ghost press, `inject_55_bounce.sh`) | 55, 55, 55 | **5, 5, 5** |
+| Overlap (5,6, `inject_56_overlap.sh`) | 566, 566, 566 | 566, 566, 566 (not fixable this way, see below) |
+| Normal typing (`inject_56.sh`) | 56 | 56, 56, 56 |
+
+It ran alongside Mouse Toggle (MATVT), Button Mapper and Voice Access with no crashes. The bounce test injects the ghost press about 0 ms after the release; a bounce from a real finger hasn't been tested yet, and neither has the filter's effect on very fast same-key double taps (its window is 20 ms; the fastest real double tap measured was 45 ms).
 
 For phones with no root at all, `BounceFilterService` is a fallback that only fixes **contact bounce** (5 → "55"), by having Android itself drop the ghost DOWN+UP pair before it reaches any app. It does **not** fix **key overlap** (5,6 → "566"), which is the main problem this project exists for — that fix needs `INJECT_EVENTS` to synthesize a release event that never happened, and normal apps (accessibility services included) can't get that permission. See ["Why not an accessibility service or a different keyboard?"](#why-not-an-accessibility-service-or-a-different-keyboard) above for why.
 
-It can't be turned on from inside the app (Android doesn't let an app enable its own accessibility service). Turn it on from a computer, once:
+It can't be turned on from inside the app (Android doesn't let an app enable its own accessibility service). Turn it on from a computer (PowerShell, or a Linux/Mac terminal). This **adds** it to the phone's accessibility list and keeps any services you already use, such as Mouse Toggle:
 
 ```
-adb shell settings put secure enabled_accessibility_services io.github.anonymousfliphones.keydebounce/io.github.anonymousfliphones.keydebounce.BounceFilterService
-adb shell settings put secure accessibility_enabled 1
+adb shell 'S=io.github.anonymousfliphones.keydebounce/.BounceFilterService; L=$(settings get secure enabled_accessibility_services); case "$L" in null|"") L=$S;; *BounceFilterService*) ;; *) L="$L:$S";; esac; settings put secure enabled_accessibility_services "$L"; settings put secure accessibility_enabled 1; settings get secure enabled_accessibility_services'
+adb reboot
 ```
 
-If you already use another accessibility service on this phone, don't run those two commands as-is — they replace the whole list. Add the service to the existing comma-separated list instead, or turn it on by hand in Settings ▸ Accessibility.
+Don't use `settings put secure enabled_accessibility_services <one service>` on its own: it replaces the whole list and turns your other accessibility services off. Entries in the list are separated by colons (`:`).
 
-To turn it off: Settings ▸ Accessibility ▸ KeyDebounce, or from a computer:
+Things this phone's firmware does that you need to know:
+
+- **Restart after turning it on or off.** Changing the list doesn't take effect until a restart. Before that, the filter isn't running even though the setting lists it.
+- **Reinstalling or updating the app removes it from the list.** Each build is signed with a new debug key, so an update means uninstall + install, and Android drops the service from the list at the next restart. Run the command above again, then restart.
+- **Check it's really on:** `adb shell dumpsys accessibility | grep -A3 KeyDebounce` should show `capabilities=8`. `capabilities=0` means Android didn't load the filter's settings (the bug fixed in PR #9).
+
+To turn it off: Settings ▸ Accessibility ▸ KeyDebounce, or from a computer (removes only this service from the list):
 
 ```
-adb shell settings put secure enabled_accessibility_services ""
-adb shell settings put secure accessibility_enabled 0
+adb shell 'L=$(settings get secure enabled_accessibility_services | sed "s#:*io.github.anonymousfliphones.keydebounce/[^:]*##; s#^:##"); settings put secure enabled_accessibility_services "$L"; settings get secure enabled_accessibility_services'
+adb reboot
 ```
-
-(again, only safe as a blanket command if this is the only accessibility service enabled).
 
 ## Requirements
 
