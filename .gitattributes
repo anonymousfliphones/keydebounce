@@ -1,0 +1,5 @@
+# Files that run or get parsed on the phone must keep LF line endings.
+*.sh  text eol=lf
+*.cil text eol=lf
+*.rc  text eol=lf
+*.c   text eol=lf
