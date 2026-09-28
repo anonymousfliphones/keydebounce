@@ -49,6 +49,19 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- No-root, bounce-only fallback for phones that aren't rooted. See BounceFilterService. -->
+        <service
+            android:name=".BounceFilterService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice.accessibility_service"
+                android:resource="@xml/bounce_filter_service" />
+        </service>
     </application>
 
 </manifest>

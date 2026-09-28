@@ -43,6 +43,11 @@
             android:text="@string/root_mode_button" />
 
         <Button
+            android:id="@+id/bounce_filter"
+            style="@style/Action"
+            android:text="@string/bounce_filter_button" />
+
+        <Button
             android:id="@+id/tester"
             style="@style/Action"
             android:text="@string/tester_title" />
