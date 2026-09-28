@@ -59,7 +59,7 @@
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
             <meta-data
-                android:name="android.accessibilityservice.accessibility_service"
+                android:name="android.accessibilityservice"
                 android:resource="@xml/bounce_filter_service" />
         </service>
     </application>
