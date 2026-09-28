@@ -97,9 +97,7 @@ jobs:
           For the **Sonim XP3800 on Android 8.1** only.
 
           ## What's new (not yet tested on a phone)
-          - **Root Manager's root is recognized properly.** Earlier versions assumed the XP3800 root turns off at every restart and said "Root isn't active, open the root app". That was wrong: `su` stays installed, and the first `su` after a restart runs Root Manager's kernel exploit (about a second, and it can crash the phone). After that, root is instant and safe until the next restart. Opening Root Manager doesn't run `su`, so that advice did nothing.
-          - **Start root.** If nothing has used root since the restart, root actions now say "Root hasn't started yet", explain the crash risk, and offer **Start root**, which runs the exploit only after you confirm. The app still never does this by itself, and never at boot (that caused a reboot loop).
-          - **Check install works after a restart too.** It used to be offered only before the first restart with the fix. It runs install's final checks again, starting with the stock policy backup (`.bak`), and changes nothing.
+          - **Start at boot asks you.** With Root Manager, root only starts on the first `su` after a restart, and that runs its exploit, which can crash the phone. So a minute after boot, if root hasn't started, the app now shows **Start the keypad filter?** with **Start** / **Not now**. Start runs the exploit once and turns the filter on. It still starts by itself if something else starts root first.
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.

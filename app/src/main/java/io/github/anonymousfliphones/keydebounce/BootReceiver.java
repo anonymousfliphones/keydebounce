@@ -37,6 +37,7 @@ public class BootReceiver extends BroadcastReceiver {
     private static final String WAITING_LOGGED = "boot_waiting_logged";
     private static final String ACTION_CHECK = "io.github.anonymousfliphones.keydebounce.BOOT_CHECK";
     private static final long RECHECK_MS = 30 * 1000;
+    private static final long PROMPT_MS = 60 * 1000;
 
     static boolean startAtBoot(Context c) {
         return prefs(c).getBoolean(START_AT_BOOT, false);
@@ -56,8 +57,9 @@ public class BootReceiver extends BroadcastReceiver {
                 log(app, false, "Skipped: the fix is installed, and root requests with it installed crash the phone.");
             } else if (RootShell.isXp3RootInstalled(app)) {
                 prefs(app).edit().putBoolean(ROOT_SEEN, false).putBoolean(WAITING_LOGGED, false).apply();
-                log(app, false, "Restarted. XP3800 root: checking for root every 30 seconds.");
+                log(app, false, "Restarted. XP3800 root: checking for root every 30 seconds, and asking in 1 minute if it hasn't started.");
                 check(app);
+                schedulePrompt(app);
             } else {
                 log(app, false, "Restarted.");
                 startNow(app);
@@ -115,6 +117,14 @@ public class BootReceiver extends BroadcastReceiver {
         }).start();
     }
 
+    /** Opens BootPromptActivity a minute from now; it does nothing if root has started by then. */
+    private static void schedulePrompt(Context c) {
+        Intent i = new Intent(c, BootPromptActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent pi = PendingIntent.getActivity(c, 1, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
+        am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + PROMPT_MS, pi);
+    }
+
     private static void schedule(Context c, long delayMs) {
         Intent i = new Intent(c, BootReceiver.class).setAction(ACTION_CHECK);
         PendingIntent pi = PendingIntent.getBroadcast(c, 0, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -129,7 +139,7 @@ public class BootReceiver extends BroadcastReceiver {
     }
 
     /** Android/data/<package>/files/boot-start.log, readable with adb pull. New file at each restart. */
-    private static void log(Context c, boolean append, String text) {
+    static void log(Context c, boolean append, String text) {
         File dir = c.getExternalFilesDir(null);
         if (dir == null) return;
         String time = new SimpleDateFormat("HH:mm:ss", Locale.US).format(new Date());

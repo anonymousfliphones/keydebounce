@@ -42,6 +42,14 @@
             android:name=".RootActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" />
 
+        <activity
+            android:name=".BootPromptActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/PromptTheme" />
+
         <receiver
             android:name=".BootReceiver"
             android:exported="true">

@@ -8,6 +8,14 @@
         <item name="android:textColorPrimary">@color/text</item>
     </style>
 
+    <!-- Boot prompt: only its dialog shows, over whatever is on screen. -->
+    <style name="PromptTheme" parent="AppTheme">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
     <style name="Screen">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
