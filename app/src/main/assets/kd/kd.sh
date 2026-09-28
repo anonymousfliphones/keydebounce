@@ -5,8 +5,10 @@
 #
 #   dryrun     stage files in /data/local/tmp/kd_dry and compile the policy twice
 #              (stock, stock + keydebounce) the way init does. Changes nothing.
-#   install    back up the stock policy, dry run, then sepolicy/install.sh
-#   uninstall  find a stock policy backup that verifies, then sepolicy/uninstall.sh
+#   install    check the policy is stock, dry run, then sepolicy/install.sh, which
+#              backs up the stock policy as .bak files in /system/etc/selinux
+#   uninstall  check a stock backup verifies, then sepolicy/uninstall.sh
+#              (.bak files first; older installs: $STOCK or /sdcard/keydebounce-backup)
 #   off | on   create/remove the kill switch and stop/start the daemon now
 #   rootstart  run the daemon from root without installing anything (until restart)
 #   rootstop   stop the daemon started by rootstart
@@ -43,9 +45,16 @@ is_stock() {
 }
 
 # A directory holding what uninstall.sh restores: stock cil + stock hash file.
+# Only older installs have one; current installs keep the .bak files instead.
 good_backup() {
   is_stock "$1/plat_sepolicy.cil" &&
     [ "$(first "$1/plat_and_mapping_sepolicy.cil.sha256")" = "$(first $VHASH)" ]
+}
+
+# The .bak files sepolicy/install.sh leaves next to the originals.
+good_bak() {
+  is_stock $S/plat_sepolicy.cil.bak &&
+    [ "$(first $S/plat_and_mapping_sepolicy.cil.sha256.bak)" = "$(first $VHASH)" ]
 }
 
 preflight() {
@@ -68,30 +77,17 @@ stage() {
   echo "files staged in $W"
 }
 
-backup() {
-  if good_backup $STOCK; then
-    echo "stock policy backup already in $STOCK"
-  else
-    is_stock $S/plat_sepolicy.cil || fail "the phone's current policy isn't stock, so it won't be backed up or changed"
-    [ "$(first $S/plat_and_mapping_sepolicy.cil.sha256)" = "$(first $VHASH)" ] ||
-      fail "the phone's policy hash file isn't stock, so nothing will be changed"
-    mkdir -p $STOCK &&
-      cp $S/plat_sepolicy.cil $S/plat_and_mapping_sepolicy.cil.sha256 $STOCK/ ||
-      fail "couldn't back up the stock policy"
-    good_backup $STOCK || fail "the stock policy backup doesn't verify"
-    chown -R shell:shell $STOCK 2>/dev/null
-    echo "stock policy backed up to $STOCK"
+# Nothing is copied here: install.sh makes the .bak backup in /system/etc/selinux.
+# This only checks there's a stock policy for it to back up (or a good .bak already).
+check_stock() {
+  if good_bak; then
+    echo "stock policy backup already in $S (.bak)"
+    return 0
   fi
-  # Second copy where adb pull and file managers can reach it.
-  for d in /sdcard /data/media/0; do
-    [ -d $d ] || continue
-    if mkdir -p $d/keydebounce-backup 2>/dev/null &&
-      cp $STOCK/plat_sepolicy.cil $STOCK/plat_and_mapping_sepolicy.cil.sha256 $d/keydebounce-backup/ 2>/dev/null; then
-      echo "copy saved to /sdcard/keydebounce-backup"
-      return 0
-    fi
-  done
-  echo "note: couldn't copy the backup to /sdcard; pull $STOCK with adb instead"
+  is_stock $S/plat_sepolicy.cil || fail "the phone's current policy isn't stock, so it won't be backed up or changed"
+  [ "$(first $S/plat_and_mapping_sepolicy.cil.sha256)" = "$(first $VHASH)" ] ||
+    fail "the phone's policy hash file isn't stock, so nothing will be changed"
+  echo "policy is stock; install.sh will back it up as .bak files in $S"
 }
 
 dryrun() {
@@ -111,10 +107,12 @@ install_fix() {
   preflight
   policy_installed && fail "the fix is already installed; use Undo first"
   stage
-  backup
+  check_stock
   dryrun
   echo "== installing =="
   sh $W/install.sh || fail "install.sh failed. Run Undo before restarting."
+  good_bak || fail "the .bak backup in $S is missing or doesn't verify. Run Undo before restarting."
+  echo "stock policy backed up: $S/plat_sepolicy.cil.bak"
   cmp -s $W/keydebounce /system/bin/keydebounce || fail "the installed daemon doesn't match. Run Undo before restarting."
   cmp -s $W/plat_sepolicy.cil $S/plat_sepolicy.cil || fail "the installed policy doesn't match. Run Undo before restarting."
   [ "$(first $S/plat_and_mapping_sepolicy.cil.sha256)" = "$(hash_with_mapping $S/plat_sepolicy.cil)" ] ||
@@ -130,22 +128,28 @@ uninstall_fix() {
   if ! policy_installed && [ ! -e /system/bin/keydebounce ] && [ ! -e /system/etc/init/keydebounce.rc ]; then
     fail "the fix isn't installed; nothing to undo"
   fi
-  if ! good_backup $STOCK; then
-    for d in /sdcard/keydebounce-backup /data/media/0/keydebounce-backup; do
-      if good_backup $d; then
-        mkdir -p $STOCK && cp $d/plat_sepolicy.cil $d/plat_and_mapping_sepolicy.cil.sha256 $STOCK/ &&
-          echo "using the backup in $d"
-        break
-      fi
-    done
+  if good_bak; then
+    echo "using the .bak backup in $S"
+  else
+    # Older installs kept the backup outside /system.
+    if ! good_backup $STOCK; then
+      for d in /sdcard/keydebounce-backup /data/media/0/keydebounce-backup; do
+        if good_backup $d; then
+          mkdir -p $STOCK && cp $d/plat_sepolicy.cil $d/plat_and_mapping_sepolicy.cil.sha256 $STOCK/ &&
+            echo "using the backup in $d"
+          break
+        fi
+      done
+    fi
+    good_backup $STOCK ||
+      fail "no stock policy backup that verifies: no .bak files in $S. Copy policy-backup/ from your computer to $STOCK with adb push, then try again."
+    echo "using the backup in $STOCK"
   fi
-  good_backup $STOCK ||
-    fail "no stock policy backup that verifies. Copy policy-backup/ from your computer to $STOCK with adb push, then try again."
   stage
   echo "== removing =="
   sh $W/uninstall.sh || fail "uninstall.sh failed. Don't restart until Undo succeeds."
-  cmp -s $STOCK/plat_sepolicy.cil $S/plat_sepolicy.cil ||
-    fail "the restored policy doesn't match the backup. Don't restart until Undo succeeds."
+  is_stock $S/plat_sepolicy.cil ||
+    fail "the restored policy isn't stock. Don't restart until Undo succeeds."
   [ "$(first $S/plat_and_mapping_sepolicy.cil.sha256)" = "$(first $VHASH)" ] ||
     fail "the restored hash file doesn't match the vendor policy. Don't restart until Undo succeeds."
   [ -e /system/bin/keydebounce ] && fail "the daemon is still in /system/bin"

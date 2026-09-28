@@ -17,7 +17,7 @@ Findings doc: https://claude.ai/code/artifact/d743b08c-8f0c-4289-8a52-9ad630f0f1
 | `policy-backup/` | PC copy of the stock `plat_sepolicy.cil` + `.sha256` from the user's phone, pulled before its first install. Never delete. |
 | `test/` | `harness.sh` + `inject_56*.sh`: automated repro via `sendevent`, reads the dialer field back with `uiautomator` |
 | `app/` | Android app (Java, no AndroidX): status, Install/Undo/Off-On via root, key tester, correction log. Package `io.github.anonymousfliphones.keydebounce`, minSdk 26. |
-| `app/src/main/assets/kd/kd.sh` | Root helper the app runs via `su`. Wraps `sepolicy/*.sh`: stages to `/data/local/tmp/kd_dry`, backs up stock policy (also `/sdcard/keydebounce-backup`), dry-runs, refuses unless the policy is stock and the baseline compile matches `/vendor/etc/selinux/precompiled_sepolicy`. `rootstart`/`rootstop` = root mode: runs the daemon from `/data/local/tmp/kd_dry/run/` via `setsid`, no install. |
+| `app/src/main/assets/kd/kd.sh` | Root helper the app runs via `su`. Wraps `sepolicy/*.sh`: stages to `/data/local/tmp/kd_dry`, checks the policy is stock (the backup itself is `install.sh`'s `.bak` files), dry-runs, refuses unless the policy is stock and the baseline compile matches `/vendor/etc/selinux/precompiled_sepolicy`. `rootstart`/`rootstop` = root mode: runs the daemon from `/data/local/tmp/kd_dry/run/` via `setsid`, no install. |
 | `.github/workflows/build-app.yml` | CI: builds the APK and uploads `keydebounce-apk` + `keydebounce-daemon` artifacts |
 
 ## Build
@@ -49,7 +49,7 @@ The app must never run `su` on its own (startup, status checks): root requests w
 
 - Disable, no root: `adb shell touch /data/local/tmp/keydebounce.off`, then reboot. Remove the file and reboot to re-enable.
 - Full removal (needs root): run `sepolicy/uninstall.sh` as root, then reboot. It restores from `/system/etc/selinux/*.bak` if present, otherwise from `/data/local/tmp/kd_dry/stock/` (older installs, and what the app's Undo stages).
-- **Open gap:** the user wants the stock backup kept only as `.bak` files in `/system`, not in `/data` or on the SD card, but `kd.sh` (the app) still copies it to `/data/local/tmp/kd_dry/stock/` and `/sdcard/keydebounce-backup/`. `kd.sh` was not changed.
+- The app (`kd.sh`) no longer copies the backup anywhere; `install.sh` makes the `.bak` files and `kd.sh` checks they verify after installing. Undo uses the `.bak` files, and only falls back to `$STOCK` / `/sdcard/keydebounce-backup` for older installs.
 - **The `.bak` backup/restore in `install.sh` and `uninstall.sh` has never been run on a phone** (the user chose to ship it untested). Treat it as unverified until someone installs and uninstalls on a test unit.
 - Backups stay on the phone as `.bak` files next to the originals in `/system/etc/selinux/` (the user's rule: not in `/data`, not on the SD card). `install.sh` makes them once and never overwrites them; it and `uninstall.sh` both verify the stock file against its hash first.
 - **The user's current phone predates this** (installed with the older script): it has no `.bak` files yet. Its stock copies are in `policy-backup/` on the PC and in `/data/local/tmp/kd_dry/stock/` on the phone. Creating the `.bak` files there needs root.

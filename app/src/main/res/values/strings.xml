@@ -45,11 +45,11 @@
 
     <string name="install_title">Install the fix?</string>
     <string name="already_installed">The fix is already installed. To reinstall, use Undo, restart the phone, then install again.</string>
-    <string name="install_msg">Before you start, have a backup of the system partition and an EDL flashing setup, in case the phone won\'t boot.\n\nThe app will:\n• Back up the stock policy to /data/local/tmp/kd_dry/stock and /sdcard/keydebounce-backup. Copy it to your computer: Undo needs it.\n• Compile the new policy the way the phone does at boot, and stop without changing anything if that fails.\n• Install the daemon and the policy.\n\nAfterwards, before you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher). With the fix installed, getting root crashed the phone on almost every attempt.</string>
+    <string name="install_msg">Before you start, have a backup of the system partition and an EDL flashing setup, in case the phone won\'t boot.\n\nThe app will:\n• Back up the stock policy on the phone, as .bak files next to the originals in /system/etc/selinux. Undo restores from them. (Untested: this backup has never been run on a phone. Keep your own copy too.)\n• Compile the new policy the way the phone does at boot, and stop without changing anything if that fails.\n• Install the daemon and the policy.\n\nAfterwards, before you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher). With the fix installed, getting root crashed the phone on almost every attempt.</string>
 
     <string name="undo_title">Remove the fix?</string>
     <string name="nothing_to_undo">The fix isn\'t installed, so there\'s nothing to undo.</string>
-    <string name="undo_msg">This restores the stock policy from the backup made when the fix was installed (or from policy-backup/ copied to /data/local/tmp/kd_dry/stock), removes the daemon, and then asks you to restart.\n\nWarning: with the fix installed, getting root crashed the phone on almost every attempt during testing. If the phone restarts, try again. If it keeps failing, flash your system backup over EDL.</string>
+    <string name="undo_msg">This restores the stock policy from the .bak backup in /system/etc/selinux made when the fix was installed (older installs: from policy-backup/ copied to /data/local/tmp/kd_dry/stock), removes the daemon, and then asks you to restart.\n\nWarning: with the fix installed, getting root crashed the phone on almost every attempt during testing. If the phone restarts, try again. If it keeps failing, flash your system backup over EDL.</string>
 
     <string name="toggle_title">Turn the fix off or on</string>
     <string name="toggle_msg">From a computer (no root needed):\n\nOff:\nadb shell touch /data/local/tmp/keydebounce.off\nadb reboot\n\nOn:\nadb shell rm /data/local/tmp/keydebounce.off\nadb reboot\n\nWhen the fix is off, the keypad works as it did before.</string>
@@ -87,7 +87,7 @@
     <string name="run_interrupted">This screen was restarted, so the command wasn\'t run again. Check the status on the main screen.</string>
     <string name="run_saved">Output saved to %s</string>
     <string name="done_dryrun">Dry run passed. Nothing on the phone was changed.</string>
-    <string name="done_install">Installed.\n\nBefore you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher).\n\nCopy /sdcard/keydebounce-backup to your computer. Undo needs it.\n\nThen restart the phone to turn the fix on.</string>
+    <string name="done_install">Installed.\n\nBefore you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher).\n\nThe stock policy is backed up as .bak files in /system/etc/selinux. Undo restores from them.\n\nThen restart the phone to turn the fix on.</string>
     <string name="done_uninstall">Removed. Restart the phone to finish.</string>
     <string name="done_off">Off. The keypad works unfiltered now, and the fix stays off after restarts until you turn it back on.</string>
     <string name="done_on">On.</string>
