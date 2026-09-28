@@ -7,8 +7,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
+import android.system.ErrnoException;
+import android.system.Os;
+import android.system.OsConstants;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,11 +26,12 @@ import java.util.Locale;
  * restart. With a root that is on at boot (Magisk) it starts right away.
  *
  * With Root Manager (the XP3800 root) the first su after each boot runs its kernel
- * exploit, which can crash the phone. From boot it checks every 30 seconds. Once the su
- * binary has been there on two checks in a row, it calls su itself, starting root and the
- * filter. A flag written before that su and cleared after it catches a crash: the next
- * boot asks (BootPromptActivity) instead of trying again, so a crashing exploit can't turn
- * into a reboot loop. If something else starts root first, it starts the filter once root
+ * exploit, which can crash the phone. From boot it checks every 30 seconds. From 1.5
+ * minutes after the boot signal, once the su binary has been there on two checks in a row,
+ * it calls su itself (about 2 minutes after the boot signal), starting root and the filter. A marker file,
+ * fsynced 30 s before that su and deleted after it, catches a crash: the next boot asks
+ * (BootPromptActivity) instead of trying again, so a crashing exploit can't turn into a
+ * reboot loop. If something else starts root first, it starts the filter once root
  * has been up for two checks in a row, keeping su away from an exploit still running.
  *
  * Never asks for root when the permanent install is present: with its policy loaded,
@@ -37,12 +42,19 @@ public class BootReceiver extends BroadcastReceiver {
     private static final String START_AT_BOOT = "start_at_boot";
     private static final String ROOT_SEEN = "boot_root_seen";
     private static final String WAITING_LOGGED = "boot_waiting_logged";
-    private static final String AUTO_ATTEMPT = "boot_auto_attempt";
     private static final String AUTO_ALLOWED = "boot_auto_allowed";
+    private static final String UPTIME_WAIT_LOGGED = "boot_uptime_wait_logged";
+    /** Marks an automatic root start in progress; see writeMarker(). */
+    private static final String ATTEMPT_MARKER = "boot_auto_attempt";
+    private static final String ASK_FIRST_MARKER = "boot_ask_first";
+    /** When the boot signal arrived (elapsedRealtime), to time the automatic start from. */
+    private static final String BOOT_SIGNAL_AT = "boot_signal_at";
+    /** su is counted from 1.5 min after the boot signal, so the automatic start runs at about 2. */
+    private static final long SU_COUNT_AFTER_BOOT_MS = 90 * 1000;
     private static final String SU_SEEN = "boot_su_seen";
     private static final String ACTION_CHECK = "io.github.anonymousfliphones.keydebounce.BOOT_CHECK";
     private static final long RECHECK_MS = 30 * 1000;
-    private static final long PROMPT_MS = 60 * 1000;
+    private static final long PROMPT_MS = 120 * 1000;
 
     static boolean startAtBoot(Context c) {
         return prefs(c).getBoolean(START_AT_BOOT, false);
@@ -62,13 +74,21 @@ public class BootReceiver extends BroadcastReceiver {
                 log(app, false, "Skipped: the fix is installed, and root requests with it installed crash the phone.");
             } else if (RootShell.isXp3RootInstalled(app)) {
                 SharedPreferences p = prefs(app);
-                boolean lastAttemptUnfinished = p.getBoolean(AUTO_ATTEMPT, false);
+                boolean lastAttemptUnfinished = marker(app).exists();
+                clearMarker(app);
+                // Once a start has crashed the phone, keep asking on every boot until one works.
+                if (lastAttemptUnfinished) writeFlag(askFirst(app));
+                boolean ask = askFirst(app).exists();
                 p.edit().putBoolean(ROOT_SEEN, false).putBoolean(WAITING_LOGGED, false)
-                        .putBoolean(AUTO_ATTEMPT, false).putBoolean(AUTO_ALLOWED, !lastAttemptUnfinished)
+                        .putBoolean(UPTIME_WAIT_LOGGED, false).putBoolean(AUTO_ALLOWED, !ask)
+                        .putLong(BOOT_SIGNAL_AT, SystemClock.elapsedRealtime())
                         .putInt(SU_SEEN, 0).commit();
                 log(app, false, "Restarted. XP3800 root: checking every 30 seconds.");
                 if (lastAttemptUnfinished) {
-                    log(app, true, "The automatic start on the last boot never finished: Root Manager's exploit probably crashed the phone. Asking this time instead of trying again.");
+                    log(app, true, "The start on the last boot never finished: Root Manager's exploit probably crashed the phone.");
+                }
+                if (ask) {
+                    log(app, true, "Asking before starting root (a start crashed the phone before; this keeps asking until a start works).");
                     schedulePrompt(app);
                 }
                 check(app);
@@ -83,14 +103,17 @@ public class BootReceiver extends BroadcastReceiver {
 
     private void check(Context app) {
         if (!startAtBoot(app)) {
+            clearMarker(app);
             log(app, true, "Start at boot was turned off. Stopped checking.");
             return;
         }
         if (PhoneStatus.installTraceOnPhone()) {
+            clearMarker(app);
             log(app, true, "Skipped: the fix is installed, and root requests with it installed crash the phone.");
             return;
         }
         if (PhoneStatus.countKeypads() >= 2) {
+            clearMarker(app);
             log(app, true, "The filter is already running. Stopped checking.");
             return;
         }
@@ -98,12 +121,23 @@ public class BootReceiver extends BroadcastReceiver {
         if (RootShell.rootNotStarted(app)) {
             p.edit().putBoolean(ROOT_SEEN, false).apply();
             if (p.getBoolean(AUTO_ALLOWED, true) && PhoneStatus.findSu()) {
+                long wait = p.getLong(BOOT_SIGNAL_AT, 0) + SU_COUNT_AFTER_BOOT_MS - SystemClock.elapsedRealtime();
+                if (wait > 0) {
+                    if (!p.getBoolean(UPTIME_WAIT_LOGGED, false)) {
+                        log(app, true, "Starting root and the filter about 2 minutes after the phone finished starting.");
+                        p.edit().putBoolean(UPTIME_WAIT_LOGGED, true).apply();
+                    }
+                    schedule(app, Math.max(wait, 1000));
+                    return;
+                }
                 int seen = p.getInt(SU_SEEN, 0) + 1;
                 p.edit().putInt(SU_SEEN, seen).apply();
                 if (seen >= 2) {
                     autoStart(app);
                     return;
                 }
+                // Written now, 30 s before su, so it is surely on disk if the exploit crashes.
+                writeMarker(app);
                 log(app, true, "su is there (check 1 of 2). Starting root and the filter after one more check in 30 seconds.");
             } else {
                 p.edit().putInt(SU_SEEN, 0).apply();
@@ -115,6 +149,7 @@ public class BootReceiver extends BroadcastReceiver {
             schedule(app, RECHECK_MS);
             return;
         }
+        clearMarker(app);  // root started some other way; no exploit run by us
         if (!p.getBoolean(ROOT_SEEN, false)) {
             p.edit().putBoolean(ROOT_SEEN, true).apply();
             log(app, true, "Root has started. Starting after one more check in 30 seconds.");
@@ -133,8 +168,7 @@ public class BootReceiver extends BroadcastReceiver {
      * su has been there on two checks in a row and root hasn't started.
      */
     private void autoStart(Context app) {
-        // commit(), not apply(): it must be on disk before the exploit, which can crash the phone.
-        prefs(app).edit().putBoolean(AUTO_ATTEMPT, true).commit();
+        writeMarker(app);  // already written at check 1; again in case it was cleared since
         log(app, true, "su is there (check 2 of 2). Starting root and the filter (runs Root Manager's exploit once):");
         run(app, true, "");
     }
@@ -147,17 +181,18 @@ public class BootReceiver extends BroadcastReceiver {
                 File dir = RootShell.unpack(app);
                 int code = RootShell.run(app, dir, RootActivity.ROOT_START, startRoot, line -> out.append(line).append('\n'));
                 out.append("exit ").append(code);
+                if (startRoot && code == 0) clearFlag(askFirst(app));
             } catch (IOException e) {
                 out.append("Couldn't unpack the app's files: ").append(e.getMessage());
             } finally {
-                if (startRoot) prefs(app).edit().putBoolean(AUTO_ATTEMPT, false).commit();
+                if (startRoot) clearMarker(app);
                 log(app, true, out.toString());
                 pending.finish();
             }
         }).start();
     }
 
-    /** After a crashed automatic start: opens BootPromptActivity a minute from now. */
+    /** After a crashed automatic start: opens BootPromptActivity 2 minutes from now. */
     private static void schedulePrompt(Context c) {
         Intent i = new Intent(c, BootPromptActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pi = PendingIntent.getActivity(c, 1, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -177,6 +212,67 @@ public class BootReceiver extends BroadcastReceiver {
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
         am.setExact(wakeup ? AlarmManager.ELAPSED_REALTIME_WAKEUP : AlarmManager.ELAPSED_REALTIME,
                 SystemClock.elapsedRealtime() + delayMs, pi);
+    }
+
+    private static File marker(Context c) {
+        return new File(c.getFilesDir(), ATTEMPT_MARKER);
+    }
+
+    /** Present once a boot-time root start has crashed the phone, until a start works. */
+    private static File askFirst(Context c) {
+        return new File(c.getFilesDir(), ASK_FIRST_MARKER);
+    }
+
+    /** The prompt's Start: same crash guard as the automatic start. */
+    static void promptStartBegins(Context c) {
+        writeMarker(c);
+    }
+
+    static void promptStartEnded(Context c, boolean ok) {
+        clearMarker(c);
+        if (ok) clearFlag(askFirst(c));
+    }
+
+    /**
+     * The crash guard. A plain file, fsynced together with its directory: the v1.13 guard
+     * (a SharedPreferences value) came back with its old value after the exploit crashed
+     * the phone, so the next boot tried again. If this file is still there at boot, the
+     * last automatic start never finished and the app asks instead of trying again.
+     */
+    private static void writeMarker(Context c) {
+        writeFlag(marker(c));
+    }
+
+    private static void clearMarker(Context c) {
+        clearFlag(marker(c));
+    }
+
+    /** Creates f and fsyncs it and its directory, so it survives a crash right after. */
+    private static void writeFlag(File f) {
+        try (FileOutputStream out = new FileOutputStream(f)) {
+            out.write('1');
+            out.getFD().sync();
+        } catch (IOException ignored) {
+            // Nothing better to do at boot; the log shows the attempt.
+        }
+        syncDir(f.getParentFile());
+    }
+
+    private static void clearFlag(File f) {
+        if (f.delete()) syncDir(f.getParentFile());
+    }
+
+    private static void syncDir(File dir) {
+        try {
+            FileDescriptor fd = Os.open(dir.getPath(), OsConstants.O_RDONLY, 0);
+            try {
+                Os.fsync(fd);
+            } finally {
+                Os.close(fd);
+            }
+        } catch (ErrnoException ignored) {
+            // The file's own sync above still happened.
+        }
     }
 
     private static SharedPreferences prefs(Context c) {

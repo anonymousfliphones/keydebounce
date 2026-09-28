@@ -25,13 +25,15 @@ public class BootPromptActivity extends Activity {
                 .setMessage(R.string.boot_prompt_msg)
                 .setPositiveButton(R.string.start_short, (d, w) -> {
                     BootReceiver.log(this, true, "Start pressed: starting root and the filter.");
+                    BootReceiver.promptStartBegins(this);
                     startActivity(new Intent(this, RootActivity.class)
                             .putExtra(RootActivity.EXTRA_COMMAND, RootActivity.ROOT_START)
-                            .putExtra(RootActivity.EXTRA_START_ROOT, true));
+                            .putExtra(RootActivity.EXTRA_START_ROOT, true)
+                            .putExtra(RootActivity.EXTRA_FROM_BOOT_PROMPT, true));
                     finish();
                 })
                 .setNegativeButton(R.string.not_now, (d, w) -> {
-                    BootReceiver.log(this, true, "Not now pressed. The next restart tries automatically again.");
+                    BootReceiver.log(this, true, "Not now pressed. The next restart asks again.");
                     finish();
                 })
                 .setOnCancelListener(d -> finish())
