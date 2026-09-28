@@ -96,10 +96,9 @@ jobs:
 
           For the **Sonim XP3800 on Android 8.1** only.
 
-          ## What's new
-          **Start at boot runs by itself** (not yet tested on a phone):
-          - With a root that's on at boot (Magisk), the filter starts right after boot.
-          - With the XP3800 root, which is off after every restart, the app checks every 30 seconds from boot, without asking for root, whether root is on. Once root has been on for two checks in a row it starts the filter: 30 to 60 seconds after you open the root app, with nothing to tap in KeyDebounce. KeyDebounce never touches the root app.
+          ## What's new (not yet tested on a phone)
+          - **Install and Undo no longer report a false "failed".** Both finished their work, but the last step (making /system read-only again) was refused as "busy", so the app said "failed", warned against restarting, and offered no Restart button. That step is now a note, a restart takes care of it, and you get Restart as normal. A real failure still shows as failed: the app checks the result.
+          - **The app can grant itself log access with root.** The correction log needs READ_LOGS, which apps can't ask for with a normal prompt. On first open (if root is present) the app offers to grant it through root, and the Correction log screen has a Grant with root button. The app closes afterwards so the permission takes effect; open it again.
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.

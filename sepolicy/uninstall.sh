@@ -53,7 +53,11 @@ fi
 relabel u:object_r:sepolicy_file:s0 $CIL $SHA
 rm -f /system/bin/keydebounce /system/etc/init/keydebounce.rc
 sync
-mount -o ro,remount /system
+# Refused ("busy") while any process has a /system file open for writing, or a deleted
+# one still open. Everything above is written and synced, so that's not a failure:
+# a restart mounts /system read-only again.
+mount -o ro,remount /system 2>/dev/null ||
+    echo "note: /system couldn't be made read-only again (busy). The removal is done; restarting does it."
 
 # These two should match: the phone goes back to loading its prebuilt policy.
 echo "system hash : $(cat $SHA)"

@@ -11,6 +11,12 @@
         style="@style/Body" />
 
     <Button
+        android:id="@+id/grant"
+        style="@style/Action"
+        android:text="@string/grant_logs_button"
+        android:visibility="gone" />
+
+    <Button
         android:id="@+id/refresh"
         style="@style/Action"
         android:text="@string/refresh" />

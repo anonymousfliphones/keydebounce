@@ -94,6 +94,12 @@
     <string name="run_done">Done</string>
     <string name="run_failed">Failed</string>
     <string name="run_busy">Wait until it finishes.</string>
+    <string name="run_grant_logs">Granting log access</string>
+    <string name="done_grant_logs">Granted. Press Close: the app closes so the permission takes effect. Then open it again.</string>
+    <string name="grant_logs_button">Grant with root</string>
+    <string name="not_now">Not now</string>
+    <string name="grant_logs_title">Allow the correction log?</string>
+    <string name="grant_logs_msg">The correction log needs permission to read the phone\'s log. Apps can\'t ask for it with a normal prompt, but with root this app can grant it to itself.\n\nWithout root, from a computer:\nadb shell pm grant %1$s android.permission.READ_LOGS\n\nYou can also do this later from the Correction log screen.</string>
     <string name="run_root_inactive">Not run: this phone\'s root isn\'t active (it turns off at every restart), and asking for root while it\'s off crashes the phone. Nothing was changed. Open the root app, then try again.</string>
     <string name="run_no_root">No result: root wasn\'t available, was refused, or stopped partway. If there\'s no output above, nothing was changed; otherwise the output shows how far it got.</string>
     <string name="run_failed_msg">It stopped at the step shown above. Everything before that step is listed in the output.</string>
@@ -123,7 +129,7 @@
     <string name="log_title">Correction log</string>
     <string name="refresh">Refresh</string>
     <string name="log_loading">Reading the log…</string>
-    <string name="log_need_permission">The app needs a one-time permission to read the log. From a computer:\n\nadb shell pm grant %1$s android.permission.READ_LOGS\nadb shell am force-stop %1$s\n\nThen open the app again.</string>
+    <string name="log_need_permission">The app needs a one-time permission to read the log. With root, press Grant with root. Or from a computer:\n\nadb shell pm grant %1$s android.permission.READ_LOGS\nadb shell am force-stop %1$s\n\nThen open the app again.</string>
     <string name="log_counts">Overlaps fixed: %1$d · Bounces caught: %2$d</string>
     <string name="log_scope">Counts cover what\'s still in the phone\'s log, usually since the last restart.</string>
     <string name="log_off_switch">At its last start the off switch was on, so it exited.</string>
