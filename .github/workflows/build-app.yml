@@ -94,7 +94,12 @@ jobs:
           > [!WARNING]
           > **The on-phone backup has never been tested.** Install backs up the stock policy as `.bak` files in `/system/etc/selinux`, and Undo restores from them. Neither has been run on a phone yet. Keep your own copy of the stock policy and a full system backup.
 
+          > [!WARNING]
+          > **Only built and tested on the Verizon XP3800 variant.** Install now refuses to proceed if this device's compiled stock policy doesn't match its own `precompiled_sepolicy` — a real check, but not a guarantee on every possible variant difference. See the README.
+
           For the **Sonim XP3800 on Android 8.1** only.
+
+          New in this release: a **bounce filter** accessibility-service fallback for phones with no root at all. It only fixes contact bounce, not key overlap, and is **untested** end to end — see the README.
 
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.
           - `keydebounce-daemon-*.zip`: the daemon binary and install scripts, for installing by hand.
