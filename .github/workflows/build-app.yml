@@ -99,7 +99,9 @@ jobs:
 
           For the **Sonim XP3800 on Android 8.1** only.
 
-          New in this release: a **bounce filter** accessibility-service fallback for phones with no root at all. It only fixes contact bounce, not key overlap, and is **untested** end to end — see the README.
+          New in this release: the no-root **bounce filter** now works. In v1.3 it never received key presses because of a manifest bug. Tested on a Verizon XP3800: an injected bounce went from "55" to "5", normal typing is unchanged, and it runs alongside Mouse Toggle with no crashes. It only fixes contact bounce, not key overlap ("566"), which still needs the root daemon or the permanent install.
+
+          If you enabled the v1.3 filter with the README's old command, check your accessibility list: that command replaced the whole list and turned off other services such as Mouse Toggle. Use the new command in the README, which adds to the list, then restart the phone. Updating the app removes the filter from the list, so add it again after installing this build.
 
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.
           - `keydebounce-daemon-*.zip`: the daemon binary and install scripts, for installing by hand.
