@@ -36,35 +36,27 @@ If the daemon stops for any reason, the keypad goes straight back to working nor
 
 **Tradeoff:** you can't hold two keys at once. Holding a single key (long press) still works.
 
+There are two ways to run it:
+
+- **Permanent install:** the daemon goes into `/system` with its own SELinux rule and starts at every boot, with no root needed after installing.
+- **Root mode:** the daemon runs through root, with no changes to `/system`, until the next restart (or at every boot with Start at boot).
+
 ### Why it needs root or the permanent install
 
-The overlap fix has to take exclusive control of the keypad (`/dev/input`) and create the replacement keypad (`/dev/uinput`). Normal apps can't touch either, so the daemon runs either through root (root mode) or with its own SELinux rule that the permanent install adds, after which it needs no root at all.
+The daemon has to take exclusive control of the keypad (`/dev/input`) and create the replacement keypad (`/dev/uinput`). Normal apps can't touch either, so it runs either through root or with the SELinux rule the permanent install adds.
 
 A different keyboard or an accessibility service can't fix the overlap:
 
 - **A different keyboard (IME):** the extra digit is added below the keyboard app; it still appeared with TT9 in place of Sonim's keyboard.
 - **An accessibility service** can only let a key through or swallow it. The overlap fix needs to send a "key released" event for the held key before the next key goes down, and creating key events needs `INJECT_EVENTS`, which only system apps get. It can remove bounce ghosts, though: that's the app's [bounce filter](#bounce-filter-no-root).
 
-## The app
+## Requirements
 
-KeyDebounce installs, runs, checks and removes the fix. Every screen works with the keypad; no touchscreen needed.
+- Sonim XP3800 (Verizon) on Android 8.1
+- Root, for installing and uninstalling the permanent install (it runs without root afterwards), or for root mode
+- A backup of the system partition, and an EDL flashing setup for the XP3800 in case the phone won't boot
 
-| Button | What it does | Root |
-| --- | --- | --- |
-| Install fix | Installs the fix permanently: backs up the stock policy, checks the new policy compiles, installs, then checks the backup and the installed files. **Dry run only** does the check without changing anything. On a phone that already has the fix, **Check install** reruns the final checks. | Yes, for the install only |
-| Undo (remove fix) | Puts the stock policy back from the backup and removes the daemon | Yes |
-| Turn off / on | Turns the installed fix off or on without uninstalling it. Shows the adb commands; with root it can switch right away. | Only for "right away" |
-| Run with root (no install) | **Start** runs the filter through root until the next restart, **Stop** stops it, **Boot** sets [Start at boot](#root-mode-and-start-at-boot). Nothing in `/system` or the policy changes. | Yes |
-| Boot notification | A silent, clearable notification when Start at boot starts the filter, and whether it came on. Off by default. | No |
-| Bounce filter (no root) | Explains the [bounce filter](#bounce-filter-no-root) and opens Accessibility settings | No |
-| Key tester | Lists every key press and release with timing, and flags overlaps, fast repeats (bounce) and double presses | No |
-| Correction log | Counts the overlap and bounce corrections the filter made | No, but needs log access (see below) |
-
-The main screen shows whether the fix is on. When it's running, Android lists two `soc:matrix_keypad@0` keypads: the real one and the daemon's replacement.
-
-The app asks for root only when you press a root action, or at boot if Start at boot is on. **Restart** buttons restart the phone in the background. Every root command's output is saved to `/sdcard/Android/data/com.anonymousfliphones.keydebounce/files/<command>.log`.
-
-### Get the app
+## Get the app
 
 1. Download `keydebounce-vX.apk` from the [latest release](https://github.com/anonymousfliphones/keydebounce/releases/latest).
 2. Install it, and give it log access for the correction log:
@@ -84,18 +76,37 @@ adb install keydebounce-vX.apk
 adb shell pm grant com.anonymousfliphones.keydebounce android.permission.READ_LOGS
 ```
 
-Builds before v1.18 used the package name `io.github.anonymousfliphones.keydebounce`; remove that one with `adb uninstall io.github.anonymousfliphones.keydebounce`. The permanent install on `/system` isn't affected by either.
+Older versions used the package name `io.github.anonymousfliphones.keydebounce`, which Android treats as a different app; remove it with `adb uninstall io.github.anonymousfliphones.keydebounce`. Uninstalling the app doesn't affect the permanent install on `/system`.
 
 Each release also has a `keydebounce-daemon-vX.zip`: the daemon binary and `sepolicy/` scripts for installing by hand.
 
+## The app
+
+KeyDebounce installs, runs, checks and removes the fix. Every screen works with the keypad; no touchscreen needed.
+
+| Button | What it does | Root |
+| --- | --- | --- |
+| Install fix | Installs the fix permanently: backs up the stock policy, checks the new policy compiles, installs, then checks the backup and the installed files. **Dry run only** does the check without changing anything. On a phone that already has the fix, **Check install** reruns the final checks. | Yes (not needed afterwards) |
+| Undo (remove fix) | Puts the stock policy back from the backup and removes the daemon | Yes |
+| Turn off / on | Turns the installed fix off or on without uninstalling it. Shows the adb commands; with root it can switch right away. | Only for "right away" |
+| Run with root (no install) | **Start** runs the filter through root until the next restart, **Stop** stops it, **Boot** sets [Start at boot](#root-mode-and-start-at-boot). Nothing in `/system` or the policy changes. | Yes |
+| Boot notification | A silent, clearable notification when Start at boot starts the filter, and whether it came on. Off by default. | No |
+| Bounce filter (no root) | Explains the [bounce filter](#bounce-filter-no-root) and opens Accessibility settings | No |
+| Key tester | Lists every key press and release with timing, and flags overlaps, fast repeats (bounce) and double presses | No |
+| Correction log | Counts the overlap and bounce corrections the filter made | No, but needs log access |
+
+The main screen shows whether the fix is on. When it's running, Android lists two `soc:matrix_keypad@0` keypads: the real one and the daemon's replacement.
+
+The app asks for root only when you press a root action, or at boot if Start at boot is on. **Restart** buttons restart the phone in the background. Every root command's output is saved to `/sdcard/Android/data/com.anonymousfliphones.keydebounce/files/<command>.log`.
+
 ## Rooting with Root Manager
 
-If you root the XP3800 with [Root Manager](https://github.com/flipphoneguy/root-sonim-xp3800) (`com.flipphoneguy.root.xp3`): its `su` stays installed in `/system/bin`, but root doesn't survive a restart: **the first root request after each restart runs a kernel exploit**, which can crash (panic) the phone. If it works, a daemon serves every later `su` safely until the next restart. Opening the Root Manager app doesn't start root; the first `su` does.
+[Root Manager](https://github.com/flipphoneguy/root-sonim-xp3800) (`com.flipphoneguy.root.xp3`) keeps `su` installed in `/system/bin`, but root doesn't survive a restart. **The first root request after each restart runs a kernel exploit**, which can crash (panic) the phone. If it works, a daemon serves every later `su` safely until the next restart. Opening the Root Manager app doesn't start root; the first `su` does.
 
-- The exploit panics more often while the phone is busy, especially in the first few minutes after booting ([its author's notes](https://github.com/flipphoneguy/root-sonim-xp3800)), and more often with the permanent install's policy loaded.
+- The exploit panics more often while the phone is busy, especially in the first few minutes after booting, and more often with the permanent install's policy loaded.
 - If root hasn't started since the restart, the app's root actions say so and offer **Start root**, which runs the exploit only when you press it.
 - The **permanent install** is the way to stop needing root: after installing, the filter runs at every boot without any root request.
-- If panics are frequent, the root tool's author recommends flashing Magisk instead, which has root at every boot with no exploit.
+- If panics are frequent, [Root Manager](https://github.com/flipphoneguy/root-sonim-xp3800)'s author recommends flashing Magisk instead, which has root at every boot with no exploit.
 
 ## Install with the app
 
@@ -122,7 +133,7 @@ What Start at boot did is saved in `boot-start.log`, next to the other logs. To 
 
 An accessibility service that drops the extra press when one key press registers twice (contact bounce, 5 → "55"). It doesn't fix key overlap (5,6 → "566"); that needs the daemon.
 
-Turn it on in **Settings ▸ Accessibility ▸ KeyDebounce**. (The app's Bounce filter screen has an **Accessibility** button that opens that list.) On the XP3800, turning it on or off only takes effect after a restart; most phones don't need one.
+Turn it on in **Settings ▸ Accessibility ▸ KeyDebounce**. The app's Bounce filter screen has an **Accessibility** button that opens that list. On the XP3800, turning it on or off only takes effect after a restart; most phones don't need one.
 
 Or from a computer:
 
@@ -138,25 +149,16 @@ To add it without retyping the others (PowerShell, or a Linux/Mac terminal):
 adb shell 'S=com.anonymousfliphones.keydebounce/.BounceFilterService; L=$(settings get secure enabled_accessibility_services); case "$L" in null|"") L=$S;; *BounceFilterService*) ;; *) L="$L:$S";; esac; settings put secure enabled_accessibility_services "$L"; settings put secure accessibility_enabled 1; settings get secure enabled_accessibility_services'
 ```
 
-On the XP3800:
-
-- **Restart after turning it on or off.** On the XP3800 the change doesn't take effect until a restart.
-- **Reinstalling or updating the app removes it from the list.** Turn it on again (and restart).
-- **Check it's really on:** `adb shell dumpsys accessibility | grep -A3 KeyDebounce` should show `capabilities=8`.
-
-To turn it off: Settings ▸ Accessibility ▸ KeyDebounce (and restart, on the XP3800). Or from a computer (removes only this service from the list):
+To turn it off, switch it off in the same Accessibility list, or from a computer (removes only this service from the list):
 
 ```
 adb shell 'L=$(settings get secure enabled_accessibility_services | sed "s#:*com.anonymousfliphones.keydebounce/[^:]*##; s#^:##"); settings put secure enabled_accessibility_services "$L"; settings get secure enabled_accessibility_services'
 ```
 
-## Requirements
+- **Reinstalling or updating the app removes it from the list.** Turn it on again afterwards.
+- **Check it's really on:** `adb shell dumpsys accessibility | grep -A3 KeyDebounce` should show `capabilities=8`.
 
-- Sonim XP3800 (Verizon) on Android 8.1
-- Root, for installing and uninstalling the permanent install (it runs without root afterwards), or for root mode
-- A backup of the system partition, and an EDL flashing setup for the XP3800 in case the phone won't boot
-
-## Install by hand (permanent, runs without root)
+## Install by hand (permanent)
 
 Android enforces SELinux at boot on this phone, so the daemon gets its own small security rule. It's added to the phone's policy, and Android recompiles the policy at every boot.
 
@@ -175,7 +177,7 @@ The installer backs up the two stock policy files **on the phone, next to the or
 
 They're made on the first install only and never overwritten, so they always hold the stock files. Reinstalling rebuilds from the `.bak` copy, so the rule is never added twice. Android ignores `.bak` files, and they survive factory resets because they're in `/system`.
 
-## Turn it off
+## Turn the permanent install off
 
 No root needed:
 
@@ -184,9 +186,9 @@ adb shell touch /data/local/tmp/keydebounce.off
 adb reboot
 ```
 
-Delete that file and reboot to turn it back on.
+Delete that file and reboot to turn it back on. The app's **Turn off / on** shows the same commands.
 
-## Uninstall
+## Uninstall the permanent install
 
 Needs root. In the app: **Undo (remove fix)**, then restart. By hand: copy `sepolicy/uninstall.sh` to the phone, run it as root, then reboot.
 
@@ -196,7 +198,7 @@ If the phone won't boot, flash the system backup over EDL.
 
 ## Build
 
-Releases are built by GitHub Actions (`.github/workflows/build-app.yml`): every push builds the app, and **Actions → Build app → Run workflow** with a release tag (for example `v1.18`) also publishes a release with the APK and the daemon zip.
+Releases are built by GitHub Actions (`.github/workflows/build-app.yml`): every push builds the app, and **Actions → Build app → Run workflow** with a release tag (for example `v2.0`) also publishes a release with the APK and the daemon zip.
 
 To build locally, the daemon (Android NDK r27, 32-bit ARM):
 
@@ -214,15 +216,15 @@ The app build compiles `keydebounce.c` with the same command and bundles it and 
 
 ## Testing
 
-`test/harness.sh` reproduces the bug without typing. It injects key presses through the real keypad device and reads the dialer's digits field back. Open the dialer first.
+`test/harness.sh` reproduces the bug without typing: it injects key presses through the real keypad device and reads the dialer's digits field back. Copy `test/` to `/data/local/tmp/`, open the dialer, and run an inject script a few times:
 
 ```
-sh /data/local/tmp/harness.sh /data/local/tmp/inject_56_overlap.sh 3
+sh /data/local/tmp/harness.sh /data/local/tmp/inject_56.sh 3
 ```
 
 | Pattern | Without the fix | With the fix |
 | --- | --- | --- |
-| Back-to-back / separated | 56 | 56 |
+| Back-to-back / separated (`inject_56.sh`) | 56 | 56 |
 | Bounce (`inject_55_bounce.sh`), with the bounce filter | 55 | 5 |
 
 ## License
