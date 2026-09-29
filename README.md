@@ -230,8 +230,10 @@ sh /data/local/tmp/harness.sh /data/local/tmp/inject_56.sh 3
 
 ## License
 
-Copyright (C) 2026 the keydebounce contributors.
+KeyDebounce is free to use, copy, modify, and share for **noncommercial purposes** (personal use, families, and the like) under the **GPL v3 with a Noncommercial Restriction**. If you distribute a modified version, you must publish its source under the same terms.
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+Using or distributing it commercially (for example, preinstalling it on phones you sell, or including it in a paid setup or flashing service) requires permission: [open an issue](https://github.com/anonymousfliphones/keydebounce/issues/new) on this repo to ask.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for the full text.
+See [`LICENSE`](LICENSE) (GPL v3) and [`LICENSE-ADDITIONAL-TERMS`](LICENSE-ADDITIONAL-TERMS) (the noncommercial restriction). Because of that restriction this is *source-available*, not OSI open source. It comes with no warranty (GPL v3, sections 15 and 16).
+
+Required notice: Copyright (c) 2026 anonymousfliphones (https://github.com/anonymousfliphones/keydebounce)
