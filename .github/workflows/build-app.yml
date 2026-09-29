@@ -97,8 +97,7 @@ jobs:
           For the **Sonim XP3800 on Android 8.1** only.
 
           ## What's new (not yet tested on a phone)
-          - **Start at boot's crash guard now survives a crash.** In v1.13 and v1.14 the "attempt in progress" mark was lost when Root Manager's exploit crashed the phone, so the next boot tried again (a reboot loop). It's now a file forced to storage 30 seconds before `su`. If an automatic start crashes the phone, every boot after that asks **Start the keypad filter?** instead of trying by itself, until a start works.
-          - **The automatic start waits until about 2 minutes after the phone finishes starting.**
+          - **Start at boot waits until about 5 minutes after power-on** before the first `su`. Root Manager's author says the exploit panics much more often while the phone is busy, especially right after boot. Measured on an XP3800, the load peaks around 2 minutes after power-on and is back near idle by about 5. The after-crash prompt also waits until then.
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.
