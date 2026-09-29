@@ -1,4 +1,4 @@
-package io.github.anonymousfliphones.keydebounce;
+package com.anonymousfliphones.keydebounce;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -54,7 +54,7 @@ public class BootReceiver extends BroadcastReceiver {
     /** Uptime at which the after-crash prompt shows: its Start runs the same exploit. */
     private static final long PROMPT_AT_UPTIME_MS = 300 * 1000;
     private static final String SU_SEEN = "boot_su_seen";
-    private static final String ACTION_CHECK = "io.github.anonymousfliphones.keydebounce.BOOT_CHECK";
+    private static final String ACTION_CHECK = "com.anonymousfliphones.keydebounce.BOOT_CHECK";
     private static final long RECHECK_MS = 30 * 1000;
 
     static boolean startAtBoot(Context c) {

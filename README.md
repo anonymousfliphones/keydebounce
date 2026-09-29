@@ -79,9 +79,11 @@ The app asks for root only when you pick Install, Undo, root mode or an "(root)"
 
 1. On GitHub, open **Actions** → **Build app** → the latest green run, and download the `keydebounce-apk` artifact. It's a zip that contains `keydebounce-debug.apk`.
 2. Install it: `adb install keydebounce-debug.apk`
-3. For the correction log, once: `adb shell pm grant io.github.anonymousfliphones.keydebounce android.permission.READ_LOGS`
+3. For the correction log, once: `adb shell pm grant com.anonymousfliphones.keydebounce android.permission.READ_LOGS`
 
-Each build is signed with a new debug key, so to update, uninstall the old app first (`adb uninstall io.github.anonymousfliphones.keydebounce`), then install and grant again.
+Each build is signed with a new debug key, so to update, uninstall the old app first (`adb uninstall com.anonymousfliphones.keydebounce`), then install and grant again.
+
+Since v1.18 the package name is `com.anonymousfliphones.keydebounce`. Older builds used `io.github.anonymousfliphones.keydebounce`, which Android treats as a different app, so remove it with `adb uninstall io.github.anonymousfliphones.keydebounce`. The permanent install on `/system` isn't affected.
 
 The same run also has a `keydebounce-daemon` artifact: the daemon binary and `sepolicy/` scripts for installing by hand.
 
@@ -110,7 +112,7 @@ If the phone is rooted with root that lets `su` use `/dev/input` and `/dev/uinpu
 
 If the root doesn't allow the keypad or `/dev/uinput`, the daemon exits right away and the app shows its log line. In that case use the permanent install. Starting the daemon over ADB (like Shizuku without root) can't work: the `adb shell` user can't open `/dev/uinput`.
 
-Every root command's output is saved to `/sdcard/Android/data/io.github.anonymousfliphones.keydebounce/files/<command>.log`.
+Every root command's output is saved to `/sdcard/Android/data/com.anonymousfliphones.keydebounce/files/<command>.log`.
 
 #### How to use the "Boot Complete" method (with root)
 
@@ -136,25 +138,39 @@ It ran alongside Mouse Toggle (MATVT), Button Mapper and Voice Access with no cr
 
 For phones with no root at all, `BounceFilterService` is a fallback that only fixes **contact bounce** (5 → "55"), by having Android itself drop the ghost DOWN+UP pair before it reaches any app. It does **not** fix **key overlap** (5,6 → "566"), which is the main problem this project exists for — that fix needs `INJECT_EVENTS` to synthesize a release event that never happened, and normal apps (accessibility services included) can't get that permission. See ["Why not an accessibility service or a different keyboard?"](#why-not-an-accessibility-service-or-a-different-keyboard) above for why.
 
-It can't be turned on from inside the app (Android doesn't let an app enable its own accessibility service). Turn it on from a computer (PowerShell, or a Linux/Mac terminal). This **adds** it to the phone's accessibility list and keeps any services you already use, such as Mouse Toggle:
+Turn it on in **Settings ▸ Accessibility ▸ KeyDebounce**, then restart. (The app's Bounce filter screen has an **Accessibility** button that opens that list.)
+
+Or from a computer:
 
 ```
-adb shell 'S=io.github.anonymousfliphones.keydebounce/.BounceFilterService; L=$(settings get secure enabled_accessibility_services); case "$L" in null|"") L=$S;; *BounceFilterService*) ;; *) L="$L:$S";; esac; settings put secure enabled_accessibility_services "$L"; settings put secure accessibility_enabled 1; settings get secure enabled_accessibility_services'
+adb shell settings put secure accessibility_enabled 1
+adb shell settings put secure enabled_accessibility_services com.anonymousfliphones.keydebounce/.BounceFilterService
 adb reboot
 ```
 
-Don't use `settings put secure enabled_accessibility_services <one service>` on its own: it replaces the whole list and turns your other accessibility services off. Entries in the list are separated by colons (`:`).
+That command **replaces** the list of accessibility services that are on. If others are on, include them too, separated by colons (`:`). See the list with `adb shell settings get secure enabled_accessibility_services`. For example, with Mouse Toggle already on:
+
+```
+adb shell settings put secure enabled_accessibility_services com.android.cts.io.github.virresh.matvt/.services.MouseEventService:com.anonymousfliphones.keydebounce/.BounceFilterService
+```
+
+To add it without retyping the others (PowerShell, or a Linux/Mac terminal):
+
+```
+adb shell 'S=com.anonymousfliphones.keydebounce/.BounceFilterService; L=$(settings get secure enabled_accessibility_services); case "$L" in null|"") L=$S;; *BounceFilterService*) ;; *) L="$L:$S";; esac; settings put secure enabled_accessibility_services "$L"; settings put secure accessibility_enabled 1; settings get secure enabled_accessibility_services'
+adb reboot
+```
 
 Things this phone's firmware does that you need to know:
 
 - **Restart after turning it on or off.** Changing the list doesn't take effect until a restart. Before that, the filter isn't running even though the setting lists it.
-- **Reinstalling or updating the app removes it from the list.** Each build is signed with a new debug key, so an update means uninstall + install, and Android drops the service from the list at the next restart. Run the command above again, then restart.
+- **Reinstalling or updating the app removes it from the list.** Each build is signed with a new debug key, so an update means uninstall + install, and Android drops the service from the list at the next restart. Turn it on again (Settings or a command above), then restart.
 - **Check it's really on:** `adb shell dumpsys accessibility | grep -A3 KeyDebounce` should show `capabilities=8`. `capabilities=0` means Android didn't load the filter's settings (the bug fixed in PR #9).
 
 To turn it off: Settings ▸ Accessibility ▸ KeyDebounce, or from a computer (removes only this service from the list):
 
 ```
-adb shell 'L=$(settings get secure enabled_accessibility_services | sed "s#:*io.github.anonymousfliphones.keydebounce/[^:]*##; s#^:##"); settings put secure enabled_accessibility_services "$L"; settings get secure enabled_accessibility_services'
+adb shell 'L=$(settings get secure enabled_accessibility_services | sed "s#:*com.anonymousfliphones.keydebounce/[^:]*##; s#^:##"); settings put secure enabled_accessibility_services "$L"; settings get secure enabled_accessibility_services'
 adb reboot
 ```
 

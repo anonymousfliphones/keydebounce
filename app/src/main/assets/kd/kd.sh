@@ -264,7 +264,7 @@ case "$CMD" in
   rootstart) root_start ;;
   rootstop) root_stop ;;
   # READ_LOGS can't be asked for with a normal permission prompt; only adb or root can grant it.
-  grantlogs) pm grant io.github.anonymousfliphones.keydebounce android.permission.READ_LOGS || fail "pm grant failed"; echo "granted" ;;
+  grantlogs) pm grant com.anonymousfliphones.keydebounce android.permission.READ_LOGS || fail "pm grant failed"; echo "granted" ;;
   # The reboot binary only sets sys.powerctl, and the property service refused that
   # for the app's root shell (reboot.log: "reboot: Success", then exit 1). Ask
   # system_server instead, which may reboot and accepts root as the caller.

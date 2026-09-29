@@ -1,4 +1,4 @@
-package io.github.anonymousfliphones.keydebounce;
+package com.anonymousfliphones.keydebounce;
 
 import android.accessibilityservice.AccessibilityService;
 import android.view.KeyEvent;
