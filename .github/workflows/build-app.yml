@@ -91,6 +91,8 @@ jobs:
           > [!CAUTION]
           > **Use at your own risk.** The permanent install changes the phone's SELinux policy and other low-level parts, and can leave it unable to boot. The developers take no responsibility for damage or data loss. This comes with no warranty (GPL-3.0, sections 15 and 16). Read the warning in the README first.
 
+          Licensed under GPL v3 with a noncommercial restriction (see LICENSE-ADDITIONAL-TERMS). For commercial use or distribution, open an issue on this repo to ask.
+
           > [!WARNING]
           > **Only built and tested on the Verizon XP3800 variant.** Install now refuses to proceed if this device's compiled stock policy doesn't match its own `precompiled_sepolicy` — a real check, but not a guarantee on every possible variant difference. See the README.
 
