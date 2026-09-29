@@ -131,10 +131,7 @@ adb shell settings put secure accessibility_enabled 1
 adb shell settings put secure enabled_accessibility_services com.anonymousfliphones.keydebounce/.BounceFilterService
 ```
 
-That command **replaces** the list of accessibility services that are on. If others are on, include them too, separated by colons (`:`). See the list with `adb shell settings get secure enabled_accessibility_services`. For example, with Mouse Toggle already on:
-
-```
-adb shell settings put secure enabled_accessibility_services com.android.cts.io.github.virresh.matvt/.services.MouseEventService:com.anonymousfliphones.keydebounce/.BounceFilterService
+That command **replaces** the list of accessibility services that are on. If others are on, include them too, separated by colons (`:`). See the list with `adb shell settings get secure enabled_accessibility_services`.
 ```
 
 To add it without retyping the others (PowerShell, or a Linux/Mac terminal):
