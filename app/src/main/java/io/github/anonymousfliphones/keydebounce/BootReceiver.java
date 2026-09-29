@@ -26,12 +26,14 @@ import java.util.Locale;
  * restart. With a root that is on at boot (Magisk) it starts right away.
  *
  * With Root Manager (the XP3800 root) the first su after each boot runs its kernel
- * exploit, which can crash the phone. From boot it checks every 30 seconds. From 1.5
- * minutes after the boot signal, once the su binary has been there on two checks in a row,
- * it calls su itself (about 2 minutes after the boot signal), starting root and the filter. A marker file,
- * fsynced 30 s before that su and deleted after it, catches a crash: the next boot asks
- * (BootPromptActivity) instead of trying again, so a crashing exploit can't turn into a
- * reboot loop. If something else starts root first, it starts the filter once root
+ * exploit, which can crash the phone, much more often while the phone is busy (per its
+ * author); measured on an XP3800, the load after boot peaks around 2 minutes after power-on
+ * and is back near idle at about 5. Apps can't read the load with root off, so it waits a
+ * fixed time: from boot it checks every 30 seconds, and from 4.5 minutes after power-on,
+ * once the su binary has been there on two checks in a row, it calls su itself (at about 5
+ * minutes), starting root and the filter. A marker file, fsynced 30 s before that su and
+ * deleted after it, catches a crash: every boot after that asks (BootPromptActivity), until
+ * a start works, instead of trying again, so a crashing exploit can't turn into a reboot loop. If something else starts root first, it starts the filter once root
  * has been up for two checks in a row, keeping su away from an exploit still running.
  *
  * Never asks for root when the permanent install is present: with its policy loaded,
@@ -47,14 +49,13 @@ public class BootReceiver extends BroadcastReceiver {
     /** Marks an automatic root start in progress; see writeMarker(). */
     private static final String ATTEMPT_MARKER = "boot_auto_attempt";
     private static final String ASK_FIRST_MARKER = "boot_ask_first";
-    /** When the boot signal arrived (elapsedRealtime), to time the automatic start from. */
-    private static final String BOOT_SIGNAL_AT = "boot_signal_at";
-    /** su is counted from 1.5 min after the boot signal, so the automatic start runs at about 2. */
-    private static final long SU_COUNT_AFTER_BOOT_MS = 90 * 1000;
+    /** Uptime from which su is counted, so the automatic start runs at about 5 minutes. */
+    private static final long SU_COUNT_FROM_UPTIME_MS = 270 * 1000;
+    /** Uptime at which the after-crash prompt shows: its Start runs the same exploit. */
+    private static final long PROMPT_AT_UPTIME_MS = 300 * 1000;
     private static final String SU_SEEN = "boot_su_seen";
     private static final String ACTION_CHECK = "io.github.anonymousfliphones.keydebounce.BOOT_CHECK";
     private static final long RECHECK_MS = 30 * 1000;
-    private static final long PROMPT_MS = 120 * 1000;
 
     static boolean startAtBoot(Context c) {
         return prefs(c).getBoolean(START_AT_BOOT, false);
@@ -81,7 +82,6 @@ public class BootReceiver extends BroadcastReceiver {
                 boolean ask = askFirst(app).exists();
                 p.edit().putBoolean(ROOT_SEEN, false).putBoolean(WAITING_LOGGED, false)
                         .putBoolean(UPTIME_WAIT_LOGGED, false).putBoolean(AUTO_ALLOWED, !ask)
-                        .putLong(BOOT_SIGNAL_AT, SystemClock.elapsedRealtime())
                         .putInt(SU_SEEN, 0).commit();
                 log(app, false, "Restarted. XP3800 root: checking every 30 seconds.");
                 if (lastAttemptUnfinished) {
@@ -121,10 +121,10 @@ public class BootReceiver extends BroadcastReceiver {
         if (RootShell.rootNotStarted(app)) {
             p.edit().putBoolean(ROOT_SEEN, false).apply();
             if (p.getBoolean(AUTO_ALLOWED, true) && PhoneStatus.findSu()) {
-                long wait = p.getLong(BOOT_SIGNAL_AT, 0) + SU_COUNT_AFTER_BOOT_MS - SystemClock.elapsedRealtime();
+                long wait = SU_COUNT_FROM_UPTIME_MS - SystemClock.elapsedRealtime();
                 if (wait > 0) {
                     if (!p.getBoolean(UPTIME_WAIT_LOGGED, false)) {
-                        log(app, true, "Starting root and the filter about 2 minutes after the phone finished starting.");
+                        log(app, true, "Starting root and the filter about 5 minutes after power-on, once the phone has calmed down after booting.");
                         p.edit().putBoolean(UPTIME_WAIT_LOGGED, true).apply();
                     }
                     schedule(app, Math.max(wait, 1000));
@@ -192,12 +192,13 @@ public class BootReceiver extends BroadcastReceiver {
         }).start();
     }
 
-    /** After a crashed automatic start: opens BootPromptActivity 2 minutes from now. */
+    /** After a crashed start: opens BootPromptActivity at about 5 minutes after power-on. */
     private static void schedulePrompt(Context c) {
         Intent i = new Intent(c, BootPromptActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pi = PendingIntent.getActivity(c, 1, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
-        am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + PROMPT_MS, pi);
+        long at = Math.max(PROMPT_AT_UPTIME_MS, SystemClock.elapsedRealtime() + 10 * 1000);
+        am.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, at, pi);
     }
 
     private static void schedule(Context c, long delayMs) {
