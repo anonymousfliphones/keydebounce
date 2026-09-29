@@ -66,6 +66,7 @@ KeyDebounce is an Android app that installs, removes and checks the fix on the p
 | Undo (remove fix) | Restores the stock policy from the backup and removes the daemon | Yes |
 | Turn off / on | Shows the adb commands for the off switch. With root it can switch now, without a restart. | Only for "now" |
 | Run with root (no install) | Starts the daemon through `su`, like Shizuku starts its server. Nothing in `/system` or the policy changes, and it stops at restart unless **Start at boot** is on. | Yes, every start |
+| Boot notification | Turns on or off a silent, clearable notification when Start at boot starts the filter: "starting", then whether it came on. Off by default. | No |
 | Bounce filter (no root) | Shows the adb commands to turn on an accessibility-service fallback for phones with no root at all. Tested: fixes contact bounce, not key overlap — see below. | No |
 | Key tester | Lists every key press and release with timing, and flags overlaps, fast repeats (bounce) and double presses | No |
 | Correction log | Counts the overlap and bounce corrections from logcat | No, but needs a one-time adb grant |
@@ -89,7 +90,7 @@ The same run also has a `keydebounce-daemon` artifact: the daemon binary and `se
 1. Back up the system partition, and have EDL flashing ready.
 2. Get root.
 3. Open KeyDebounce → **Install fix**. It stops before changing anything if the policy isn't stock, a compile fails, or the stock compile doesn't match the phone's precompiled policy.
-4. The stock policy is now backed up as `.bak` files in `/system/etc/selinux/`; Undo restores from them. Nothing is saved to `/data` or the SD card. The install ends by checking the `.bak` files are the stock policy with the stock label, then that `/system` holds what it installed. (Untested, see the warning at the top.)
+4. The stock policy is now backed up as `.bak` files in `/system/etc/selinux/`; Undo restores from them. Nothing is saved to `/data` or the SD card. The install ends by checking the `.bak` files are the stock policy with the stock label, then that `/system` holds what it installed.
 5. Remove root, or disable apps that ask for root at startup (see the warning below).
 6. Restart the phone. The main screen should say **Fix is ON**.
 
@@ -105,7 +106,7 @@ The same run also has a `keydebounce-daemon` artifact: the daemon binary and `se
 
 ### Root mode (no install)
 
-If the phone is rooted with root that lets `su` use `/dev/input` and `/dev/uinput` (Magisk does), **Run with root (no install)** → **Start** runs the filter with no changes to `/system` or the SELinux policy. **Stop** ends it, and a restart ends it too. To start it after every restart, use **Boot…** → **Turn on** (Start at boot). It starts the filter by itself after a restart, with nothing to tap. With a root that's on at boot (Magisk) it starts right away. With Root Manager, whose first `su` after a restart runs its kernel exploit (see above), about 5 minutes after power-on, once `su` has been there on two checks in a row, the app starts root (running the exploit once) and the filter by itself. If that crashed the phone on the previous boot, it asks first instead (see the warning above). Turning Start at boot on asks **Restart now** / **Later**, since it only acts after a restart. Meanwhile it checks every 30 seconds from boot, without asking for root, whether something else has started root, and starts once root has been up for two checks in a row: 30 to 60 seconds after the first `su`. The second check keeps it from calling `su` while the exploit is still running. What it did is saved as `boot-start.log`, next to the other logs listed below.
+If the phone is rooted with root that lets `su` use `/dev/input` and `/dev/uinput` (Magisk does), **Run with root (no install)** → **Start** runs the filter with no changes to `/system` or the SELinux policy. **Stop** ends it, and a restart ends it too. To start it after every restart, use **Boot** → **Turn on** (Start at boot). It starts the filter by itself after a restart, with nothing to tap. With a root that's on at boot (Magisk) it starts right away. With Root Manager, whose first `su` after a restart runs its kernel exploit (see above), about 5 minutes after power-on, once `su` has been there on two checks in a row, the app starts root (running the exploit once) and the filter by itself. If that crashed the phone on the previous boot, it asks first instead (see the warning above). Turning Start at boot on asks **Restart now** / **Later**, since it only acts after a restart. Meanwhile it checks every 30 seconds from boot, without asking for root, whether something else has started root, and starts once root has been up for two checks in a row: 30 to 60 seconds after the first `su`. The second check keeps it from calling `su` while the exploit is still running. What it did is saved as `boot-start.log`, next to the other logs listed below. To also get a notification when it starts the filter, use **Boot notification** on the main screen (v1.17+, off by default): a silent notification says it's starting, then whether it came on or why not. You can swipe it away.
 
 If the root doesn't allow the keypad or `/dev/uinput`, the daemon exits right away and the app shows its log line. In that case use the permanent install. Starting the daemon over ADB (like Shizuku without root) can't work: the `adb shell` user can't open `/dev/uinput`.
 
@@ -117,7 +118,7 @@ If you do not want to touch the SELinux policy or `/system`, you don't actually 
 
 1. Make sure your device is rooted (the root manager must allow `su` to access `/dev/uinput`).
 2. In the KeyDebounce app, go to **Run with root (no install)**.
-3. Choose **Boot…** → **Turn on**.
+3. Choose **Boot** → **Turn on**.
 
 When you do this, the app uses a standard boot receiver: it launches the daemon via `su` once the phone finishes booting (with Root Manager, once something else has started root, see above). It never runs Root Manager's exploit at boot, and it won't make any permanent changes to your SELinux policy or `/system` partition.
 
@@ -180,8 +181,6 @@ The installer backs up the two stock policy files **on the phone, next to the or
 | `/system/etc/selinux/plat_sepolicy.cil.bak` | `plat_sepolicy.cil` |
 | `/system/etc/selinux/plat_and_mapping_sepolicy.cil.sha256.bak` | `plat_and_mapping_sepolicy.cil.sha256` |
 
-**Untested:** this backup step has never been run on a phone. Also copy both files to your PC before installing.
-
 They're made on the first install only and never overwritten, so they always hold the stock files. Reinstalling rebuilds from the `.bak` copy, so the rule is never added twice. Android ignores `.bak` files, and they survive factory resets because they're in `/system`.
 
 > **Warning: remove root, or disable apps that ask for root at startup (such as Lucky Patcher), before rebooting.**
@@ -208,8 +207,6 @@ Needs root. In the app: **Undo (remove fix)**, then restart. By hand: copy `sepo
 2. Otherwise, `/data/local/tmp/kd_dry/stock/`. Phones installed before the `.bak` backup existed only have this (put the two stock files there with `adb push`).
 
 It checks the backup against its hash before changing anything, puts the stock files back, and deletes the daemon and its startup entry. The phone then goes back to loading its prebuilt policy, exactly as before the install.
-
-**Untested:** the `.bak` restore has never been run on a phone. If it fails, restore the two stock files from your own copy, or flash the system backup over EDL.
 
 If the phone won't boot, flash the system backup over EDL.
 

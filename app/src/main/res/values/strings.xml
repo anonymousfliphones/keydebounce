@@ -41,42 +41,55 @@
     <string name="unsupported_msg">The installer only works on the Sonim XP3800 with Android 8.1.\n\nThis phone: Android %1$s, XP3800 keypad %2$s.</string>
 
     <string name="need_root_title">Root needed</string>
-    <string name="need_root_install">Installing needs root, but only for the install. The fix runs without root afterwards.\n\nGet root first (for example with Root Manager), then come back. Or install from a computer: see the README on GitHub.</string>
-    <string name="need_root_undo">Undo needs root. Without root you can still turn the fix off (Turn off / on), or flash your system backup over EDL.</string>
+    <string name="need_root_install">Installs the fix permanently. Installing needs root; the fix then runs without root. Or install from a computer (see the README).</string>
+    <string name="need_root_undo">Removes the permanent install. It needs root; without root, Turn off / on can turn the fix off instead.</string>
 
     <string name="install_title">Install the fix?</string>
     <string name="already_installed">The fix is already installed. To reinstall, use Undo, restart the phone, then install again.</string>
     <string name="check_install">Check install</string>
     <string name="check_install_msg">Check install reruns the install\'s final checks with root, changing nothing: the stock policy backup (.bak) is the stock policy with its stock label, and /system holds what was installed. Use it after an install that showed \"failed\" after \"Installed. Reboot to start it.\"</string>
-    <string name="install_msg">Before you start, have a backup of the system partition and an EDL flashing setup, in case the phone won\'t boot.\n\nThe app will:\n• Back up the stock policy on the phone, as .bak files next to the originals in /system/etc/selinux. Undo restores from them. (Untested: this backup has never been run on a phone. Keep your own copy too.)\n• Compile the new policy the way the phone does at boot, and stop without changing anything if that fails.\n• Install the daemon and the policy.\n\nAfterwards, before you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher). With the fix installed, getting root crashed the phone on almost every attempt.</string>
+    <string name="install_msg">Before you start, have a backup of the system partition and an EDL flashing setup, in case the phone won\'t boot.\n\nInstalls the fix permanently, so the filter runs at every boot without root:\n• Backs up the stock SELinux policy as .bak files in /system/etc/selinux. Undo restores from them.\n• Checks that the new policy compiles, and stops without changing anything if it doesn\'t.\n• Installs the filter and its policy rule.\n\nDry run only does the check, without changing anything.</string>
 
     <string name="undo_title">Remove the fix?</string>
     <string name="nothing_to_undo">The fix isn\'t installed, so there\'s nothing to undo.</string>
-    <string name="undo_msg">This restores the stock policy from the .bak backup in /system/etc/selinux made when the fix was installed (older installs: from policy-backup/ copied to /data/local/tmp/kd_dry/stock), removes the daemon, and then asks you to restart.\n\nWarning: with the fix installed, getting root crashed the phone on almost every attempt during testing. If the phone restarts, try again. If it keeps failing, flash your system backup over EDL.</string>
+    <string name="undo_msg">Removes the permanent install: puts the stock SELinux policy back from the .bak backup and deletes the filter. Restart afterwards to finish.\n\nIf the phone won\'t boot afterwards, flash your system backup over EDL.</string>
 
     <string name="toggle_title">Turn the fix off or on</string>
-    <string name="toggle_msg">From a computer (no root needed):\n\nOff:\nadb shell touch /data/local/tmp/keydebounce.off\nadb reboot\n\nOn:\nadb shell rm /data/local/tmp/keydebounce.off\nadb reboot\n\nWhen the fix is off, the keypad works as it did before.</string>
-    <string name="toggle_not_installed">The fix isn\'t installed. If you run it in root mode, use Run with root (no install) → Stop, and turn off Start at boot.</string>
-    <string name="toggle_root_note">With root, the app can do this now, without a restart. With the fix installed, getting root crashed the phone on almost every attempt during testing.</string>
+    <string name="toggle_msg">Turns the installed fix off or on without uninstalling it. When it\'s off, the keypad works as it did before.\n\nFrom a computer:\n\nOff:\nadb shell touch /data/local/tmp/keydebounce.off\nadb reboot\n\nOn:\nadb shell rm /data/local/tmp/keydebounce.off\nadb reboot</string>
+    <string name="toggle_not_installed">Turns the installed fix off or on. The fix isn\'t installed; to stop root mode, use Run with root ▸ Stop.</string>
+    <string name="toggle_root_note">With root, Off now and On now switch it right away, without a restart.</string>
 
     <string name="root_mode_title">Run with root, no install</string>
-    <string name="root_mode_msg">Starts the filter through root, the way Shizuku starts its server. Nothing in /system or the SELinux policy changes, and it stops when the phone restarts.\n\nStart at boot is %1$s. When it\'s on, the filter starts by itself after a restart, once root is on.\n\nThe root has to allow access to the keypad and /dev/uinput (Magisk does). If it doesn\'t, the output shows why.</string>
-    <string name="root_mode_installed">The fix is installed, so it already starts at boot. Root mode is for phones without the install.</string>
-    <string name="need_root_mode">Root mode needs root. Without root, the only option is the permanent install from a computer (see the README on GitHub).</string>
+    <string name="root_mode_msg">Runs the filter through root, without installing anything. Start turns it on until the next restart, and Stop turns it off.\n\nBoot sets Start at boot (now %1$s), which turns the filter on by itself after each restart. With Root Manager it waits until about 5 minutes after power-on, when the phone has calmed down, before starting root.</string>
+    <string name="root_mode_installed">Runs the filter through root, without installing anything. The fix is installed, so it already runs at every boot.</string>
+    <string name="need_root_mode">Runs the filter through root, without installing anything. It needs root.</string>
 
     <string name="bounce_filter_title">Bounce filter (no root)</string>
-    <string name="bounce_filter_msg">No root needed. Tested: it fixes contact bounce (5 -&gt; \"55\"). It cannot fix key overlap (5,6 -&gt; \"566\"), which is the main problem and still needs the root daemon.\n\nIt can\'t be turned on from inside the app. From a computer, run the command in the README (Bounce filter section). It adds this service to the phone\'s accessibility list and keeps the others, such as Mouse Toggle. Don\'t replace the whole list with just this service.\n\nThen restart the phone: on this phone, turning an accessibility service on or off only takes effect after a restart.\n\nAfter reinstalling or updating this app, add it again and restart.\n\nTo turn it off: Settings ▸ Accessibility ▸ %2$s, or open Settings from here. Then restart.\n\n(%1$s/.BounceFilterService)</string>
-    <string name="bounce_filter_open_settings">Open Accessibility settings</string>
+    <string name="bounce_filter_msg">Drops the extra press when one key press registers twice (contact bounce), without root. It doesn\'t fix key overlap; the root filter does.\n\nTurn it on from a computer with the command in the README (Bounce filter section), then restart. Turn it off in Accessibility ▸ %2$s, then restart.\n\n(%1$s/.BounceFilterService)</string>
+    <string name="bounce_filter_open_settings">Accessibility</string>
     <string name="bounce_filter_desc">No-root fallback that only fixes contact bounce (a key registering twice from one press). It does not fix key overlap (two keys pressed close together); that still needs the root daemon. See the README on GitHub.</string>
 
     <string name="start_short">Start</string>
     <string name="stop">Stop</string>
-    <string name="boot_button">Boot…</string>
+    <string name="boot_button">Boot</string>
     <string name="boot_title">Start at boot</string>
-    <string name="boot_msg">Start at boot is %1$s.\n\nWhen it\'s on, the filter starts by itself after a restart, with nothing to tap. With a root that\'s on at boot (Magisk) it starts right away.</string>
-    <string name="boot_xp3_note">With Root Manager, the first root request after each restart runs its kernel exploit, which can crash the phone. About 5 minutes after power-on, once the phone has calmed down after booting (the exploit crashes more often while the phone is busy), the app starts root and the filter by itself. If that ever crashes the phone, every restart after that asks first (Start / Not now) until a start works, so it can\'t turn into a reboot loop. If something else starts root sooner (for example su in Termux), the filter starts 30 to 60 seconds after that.</string>
+    <string name="boot_msg">Start at boot is %1$s.\n\nTurns the filter on by itself after each restart, with nothing to tap. With a root that\'s on at boot (Magisk), it starts right away.</string>
+    <string name="boot_xp3_note">With Root Manager, it waits until about 5 minutes after power-on, then starts root and the filter. If starting root ever crashes the phone, the next restarts ask first (Start / Not now) until a start works.</string>
     <string name="boot_prompt_title">Start the keypad filter?</string>
     <string name="boot_prompt_msg">Starting root at boot crashed the phone before (Root Manager\'s exploit), so the app asks instead of trying by itself, on every restart until a start works.\n\nStart tries now. Not now leaves it off; the next restart asks again.</string>
+    <string name="notify_main_button">Boot notification</string>
+    <string name="notify_title">Start at boot notification</string>
+    <string name="notify_msg">Boot notification is %1$s.\n\nShows a silent notification when Start at boot starts the filter, and then whether it came on. You can swipe it away.</string>
+    <string name="notify_now_on">Start at boot notification is on.</string>
+    <string name="notify_now_off">Start at boot notification is off.</string>
+    <string name="notify_channel">Start at boot</string>
+    <string name="notify_starting_title">Starting the keypad filter…</string>
+    <string name="notify_starting_root_text">Start at boot is starting root and the filter.</string>
+    <string name="notify_starting_text">Start at boot is starting the filter.</string>
+    <string name="notify_on_title">Keypad filter is on</string>
+    <string name="notify_on_text">Started by Start at boot.</string>
+    <string name="notify_failed_title">Keypad filter didn\'t start</string>
+    <string name="notify_failed_text">Start at boot couldn\'t start it: %1$s</string>
     <string name="boot_restart_title">Restart now?</string>
     <string name="boot_restart_msg">Start at boot is on. It takes effect after a restart.</string>
     <string name="restart_now">Restart now</string>
@@ -84,8 +97,8 @@
     <string name="turn_on">Turn on</string>
     <string name="turn_off">Turn off</string>
     <string name="root_not_started_title">Root hasn\'t started yet</string>
-    <string name="root_not_started_msg">Nothing has used root since the phone restarted. Root Manager\'s su is always installed, but the first root request after each restart runs its kernel exploit. That takes about a second and can crash and restart the phone. After that, root requests are instant and safe until the next restart.\n\nStart root now? Or start it another way first (su in Termux, or adb shell su), then try again.</string>
-    <string name="root_not_started_installed">With the fix installed, the exploit crashed the phone on almost every attempt during testing.</string>
+    <string name="root_not_started_msg">Root hasn\'t started since the phone restarted. Start root starts it (Root Manager\'s exploit runs once and can crash and restart the phone), then runs this.</string>
+    <string name="root_not_started_installed">With the fix installed, it crashes more often.</string>
     <string name="start_root">Start root</string>
     <string name="boot_now_on">Start at boot is on. After a restart the filter starts by itself once root is on.</string>
     <string name="boot_now_off">Start at boot is off.</string>
@@ -111,7 +124,7 @@
     <string name="grant_logs_button">Grant with root</string>
     <string name="not_now">Not now</string>
     <string name="grant_logs_title">Allow the correction log?</string>
-    <string name="grant_logs_msg">The correction log needs permission to read the phone\'s log. Apps can\'t ask for it with a normal prompt, but with root this app can grant it to itself.\n\nWithout root, from a computer:\nadb shell pm grant %1$s android.permission.READ_LOGS\n\nYou can also do this later from the Correction log screen.</string>
+    <string name="grant_logs_msg">The correction log needs permission to read the phone\'s log. Grant with root gives the app that permission.\n\nWithout root, from a computer:\nadb shell pm grant %1$s android.permission.READ_LOGS</string>
     <string name="run_root_not_started">Not run: root hasn\'t started since the restart, and starting it runs Root Manager\'s kernel exploit, which can crash the phone. Nothing was changed.</string>
     <string name="run_no_root">No result: root wasn\'t available, was refused, or stopped partway. If there\'s no output above, nothing was changed; otherwise the output shows how far it got.</string>
     <string name="run_failed_msg">It stopped at the step shown above. Everything before that step is listed in the output.</string>
@@ -119,8 +132,8 @@
     <string name="run_interrupted">This screen was restarted, so the command wasn\'t run again. Check the status on the main screen.</string>
     <string name="run_saved">Output saved to %s</string>
     <string name="done_dryrun">Dry run passed. Nothing on the phone was changed.</string>
-    <string name="done_install">Installed.\n\nBefore you restart: remove root, or disable apps that ask for root at startup (such as Lucky Patcher).\n\nThe stock policy is backed up as .bak files in /system/etc/selinux. Undo restores from them.\n\nThen restart the phone to turn the fix on.</string>
-    <string name="done_verify">The install checks out: the stock policy backup (.bak) verifies, and /system holds what was installed.\n\nIf you haven\'t restarted since installing: disable apps that ask for root at startup (such as Lucky Patcher), or remove root, then restart to turn the fix on.</string>
+    <string name="done_install">Installed.\n\nThe stock policy is backed up as .bak files in /system/etc/selinux. Undo restores from them.\n\nRestart the phone to turn the fix on.</string>
+    <string name="done_verify">The install checks out: the stock policy backup (.bak) verifies, and /system holds what was installed.\n\nIf you haven\'t restarted since installing, restart to turn the fix on.</string>
     <string name="done_uninstall">Removed. Restart the phone to finish.</string>
     <string name="done_off">Off. The keypad works unfiltered now, and the fix stays off after restarts until you turn it back on.</string>
     <string name="done_on">On.</string>
@@ -129,12 +142,12 @@
     <string name="restart">Restart</string>
     <string name="not_yet">Not yet</string>
     <string name="restart_title">Restart now?</string>
-    <string name="restart_after_install">Before restarting, remove root or disable apps that ask for root at startup (such as Lucky Patcher). With the fix installed, an app that asks for root at startup can cause a reboot loop.\n\nIf you\'re removing root first, restart with the power key afterwards.</string>
+    <string name="restart_after_install">Restart now to turn the fix on.</string>
     <string name="restart_after_undo">Restart to finish removing the fix.</string>
 
     <!-- Key tester -->
     <string name="tester_title">Key tester</string>
-    <string name="tester_help">Type in the box. Every press is listed below, newest first. The extra digit comes from overlaps (a key pressed while another is held); with the fix on there should be none. Press Back to exit.</string>
+    <string name="tester_help">Type in the box. Every key press and release is listed below, newest first, with its timing, and overlaps, fast repeats and double presses are flagged. Press Back to exit.</string>
     <string name="tester_hint">Type here</string>
     <string name="tester_summary">Presses %1$d · Overlaps %2$d\nFast repeats %3$d · Double downs %4$d</string>
 
@@ -142,7 +155,7 @@
     <string name="log_title">Correction log</string>
     <string name="refresh">Refresh</string>
     <string name="log_loading">Reading the log…</string>
-    <string name="log_need_permission">The app needs a one-time permission to read the log. With root, press Grant with root. Or from a computer:\n\nadb shell pm grant %1$s android.permission.READ_LOGS\nadb shell am force-stop %1$s\n\nThen open the app again.</string>
+    <string name="log_need_permission">Shows how many overlaps and bounces the filter corrected. It needs permission to read the phone\'s log: press Grant with root, or from a computer:\n\nadb shell pm grant %1$s android.permission.READ_LOGS\nadb shell am force-stop %1$s\n\nThen open the app again.</string>
     <string name="log_counts">Overlaps fixed: %1$d · Bounces caught: %2$d</string>
     <string name="log_scope">Counts cover what\'s still in the phone\'s log, usually since the last restart.</string>
     <string name="log_off_switch">At its last start the off switch was on, so it exited.</string>

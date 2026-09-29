@@ -11,6 +11,9 @@
     <!-- Root mode's opt-in "Start at boot". -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- Start at boot's optional notification. Only asked for on Android 13+; not needed on 8.1. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
