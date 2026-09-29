@@ -133,9 +133,7 @@ adb shell settings put secure enabled_accessibility_services com.anonymousflipho
 
 That command **replaces** the list of accessibility services that are on. If others are on, include them too, separated by colons (`:`). See the list with `adb shell settings get secure enabled_accessibility_services`.
 ```
-
 To add it without retyping the others (PowerShell, or a Linux/Mac terminal):
-
 ```
 adb shell 'S=com.anonymousfliphones.keydebounce/.BounceFilterService; L=$(settings get secure enabled_accessibility_services); case "$L" in null|"") L=$S;; *BounceFilterService*) ;; *) L="$L:$S";; esac; settings put secure enabled_accessibility_services "$L"; settings put secure accessibility_enabled 1; settings get secure enabled_accessibility_services'
 ```
