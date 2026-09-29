@@ -62,15 +62,21 @@
             style="@style/Action"
             android:text="@string/log_title" />
 
-        <!-- Small link to the source; focusable so the D-pad can reach it. -->
+        <!-- Small link to the source; focusable so the D-pad can reach it. Wrap width keeps
+             the icon next to the text. -->
         <TextView
             android:id="@+id/repo_link"
             style="@style/Small"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_marginTop="8dp"
             android:background="?android:attr/selectableItemBackground"
             android:clickable="true"
+            android:drawableStart="@drawable/ic_github"
+            android:drawablePadding="6dp"
+            android:drawableTint="@color/text_secondary"
             android:focusable="true"
-            android:gravity="center"
+            android:gravity="center_vertical"
             android:padding="4dp"
             android:text="@string/repo_link" />
     </LinearLayout>

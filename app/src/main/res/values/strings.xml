@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">KeyDebounce</string>
-    <string name="repo_link">github.com/anonymousfliphones/keydebounce</string>
+    <string name="repo_link"><u>Go to this repo</u></string>
     <string name="repo_url" translatable="false">https://github.com/anonymousfliphones/keydebounce</string>
     <string name="repo_title">Source code</string>
 
