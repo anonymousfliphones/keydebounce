@@ -96,10 +96,15 @@ jobs:
 
           For the **Sonim XP3800 on Android 8.1** only.
 
-          ## What's new
-          - **New package name: `com.anonymousfliphones.keydebounce`.** Android treats it as a different app, so uninstall the old one first: `adb uninstall io.github.anonymousfliphones.keydebounce`. Settings like Start at boot start over. The permanent install on /system isn't affected.
-          - **Bounce filter:** turn it on in Settings ▸ Accessibility ▸ KeyDebounce, or with the regular command, which the app now shows:
-            `adb shell settings put secure enabled_accessibility_services com.anonymousfliphones.keydebounce/.BounceFilterService` (it replaces the list of accessibility services that are on; include any others, separated by `:`).
+          ## What's new in 2.0 (since v1.5)
+          - **New package name: `com.anonymousfliphones.keydebounce`.** Android treats it as a different app, so uninstall the old one first: `adb uninstall io.github.anonymousfliphones.keydebounce`. The permanent install on /system isn't affected.
+          - **Root Manager support.** With Root Manager, the first root request after each restart runs its exploit, which can crash the phone. The app now tells you when root hasn't started yet and offers **Start root** instead of crashing the phone unasked.
+          - **Start at boot works with Root Manager.** It waits until about 5 minutes after power-on, when the phone has calmed down, then starts root and the filter. If that ever crashes the phone, the next restarts ask first until a start works. With Magisk it starts right away.
+          - **Boot notification** (optional): a silent notification when Start at boot starts the filter.
+          - **Install and Undo** no longer report a false "failed", and **Check install** verifies an install. **Restart** runs in the background.
+          - **Log access with root:** the app can grant itself the correction log's permission (**Grant with root**).
+          - **Bounce filter (no root)** works: turn it on in Settings ▸ Accessibility ▸ KeyDebounce, or with the command shown in the app.
+          - The D-pad reaches every button, the root mode buttons fit the screen, and every option's text just explains what it does.
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.
