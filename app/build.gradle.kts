@@ -9,16 +9,16 @@ plugins {
 val daemonNdk = "27.0.12077973"
 
 android {
-    namespace = "io.github.anonymousfliphones.keydebounce"
+    namespace = "com.anonymousfliphones.keydebounce"
     compileSdk = 35
     ndkVersion = daemonNdk
 
     defaultConfig {
-        applicationId = "io.github.anonymousfliphones.keydebounce"
+        applicationId = "com.anonymousfliphones.keydebounce"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
-        versionName = "1.17"
+        versionCode = 19
+        versionName = "1.18"
     }
 
     compileOptions {

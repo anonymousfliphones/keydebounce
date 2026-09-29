@@ -96,10 +96,10 @@ jobs:
 
           For the **Sonim XP3800 on Android 8.1** only.
 
-          ## What's new (not yet tested on a phone)
-          - **Optional Start at boot notification.** The new **Boot notification** button on the main screen turns it on (off by default). When Start at boot starts the filter (with Root Manager, about 5 minutes after power-on), a silent notification says it's starting, then whether it came on or why not. Swipe it away or tap it to open the app.
-          - Run with root's **Boot...** button is now just **Boot**.
-          - **Simpler text.** Every option now just explains what it does. The "backup untested" notes are gone (Install's backup and Undo's restore have been used on a phone), and Bounce filter's Accessibility button fits on the screen.
+          ## What's new
+          - **New package name: `com.anonymousfliphones.keydebounce`.** Android treats it as a different app, so uninstall the old one first: `adb uninstall io.github.anonymousfliphones.keydebounce`. Settings like Start at boot start over. The permanent install on /system isn't affected.
+          - **Bounce filter:** turn it on in Settings ▸ Accessibility ▸ KeyDebounce, or with the regular command, which the app now shows:
+            `adb shell settings put secure enabled_accessibility_services com.anonymousfliphones.keydebounce/.BounceFilterService` (it replaces the list of accessibility services that are on; include any others, separated by `:`).
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<io.github.anonymousfliphones.keydebounce.KeyWatchLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.anonymousfliphones.keydebounce.KeyWatchLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root"
     style="@style/Screen">
 
@@ -32,4 +32,4 @@
         style="@style/Mono"
         android:layout_height="0dp"
         android:layout_weight="1" />
-</io.github.anonymousfliphones.keydebounce.KeyWatchLayout>
+</com.anonymousfliphones.keydebounce.KeyWatchLayout>

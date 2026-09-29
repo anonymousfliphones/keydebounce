@@ -1,4 +1,4 @@
-package io.github.anonymousfliphones.keydebounce;
+package com.anonymousfliphones.keydebounce;
 
 import android.app.Activity;
 import android.app.AlertDialog;

@@ -1,4 +1,4 @@
-package io.github.anonymousfliphones.keydebounce;
+package com.anonymousfliphones.keydebounce;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
