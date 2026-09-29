@@ -2,7 +2,9 @@ package com.anonymousfliphones.keydebounce;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.net.Uri;
 import android.hardware.input.InputManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,6 +38,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         findViewById(R.id.bounce_filter).setOnClickListener(v -> onBounceFilter());
         findViewById(R.id.tester).setOnClickListener(v -> startActivity(new Intent(this, KeyTestActivity.class)));
         findViewById(R.id.log).setOnClickListener(v -> startActivity(new Intent(this, LogActivity.class)));
+        findViewById(R.id.repo_link).setOnClickListener(v -> openRepo());
         findViewById(R.id.install).requestFocus();
     }
 
@@ -286,6 +289,15 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
 
     private void run(String command) {
         RootActivity.launch(this, command);
+    }
+
+    /** Opens the GitHub repo; many locked-down phones have no browser, so then it just shows the address. */
+    private void openRepo() {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.repo_url))));
+        } catch (ActivityNotFoundException e) {
+            message(R.string.repo_title, getString(R.string.repo_url));
+        }
     }
 
     private void message(int title, String text) {

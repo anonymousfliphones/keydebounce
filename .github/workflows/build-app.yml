@@ -105,6 +105,7 @@ jobs:
           - **Log access with root:** the app can grant itself the correction log's permission (**Grant with root**).
           - **Bounce filter (no root)** works: turn it on in Settings ▸ Accessibility ▸ KeyDebounce, or with the command shown in the app.
           - The D-pad reaches every button, the root mode buttons fit the screen, and every option's text just explains what it does.
+          - A small link to this GitHub repo at the bottom of the main screen. It opens in the phone's browser if there is one; otherwise it shows the address.
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.
