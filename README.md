@@ -67,16 +67,30 @@ The app asks for root only when you press a root action, or at boot if Start at 
 ### Get the app
 
 1. Download `keydebounce-vX.apk` from the [latest release](https://github.com/anonymousfliphones/keydebounce/releases/latest).
-2. Install it: `adb install keydebounce-vX.apk`
-3. For the correction log, grant log access once. With root the app offers **Grant with root** on first open and on the Correction log screen. Without root: `adb shell pm grant com.anonymousfliphones.keydebounce android.permission.READ_LOGS`
+2. Install it, and give it log access for the correction log:
 
-Each release is signed with a new debug key, so to update, uninstall the old app first (`adb uninstall com.anonymousfliphones.keydebounce`), then install and grant again. Builds before v1.18 used the package name `io.github.anonymousfliphones.keydebounce`; remove that one with `adb uninstall io.github.anonymousfliphones.keydebounce`. The permanent install on `/system` isn't affected by either.
+   ```
+   adb install keydebounce-vX.apk
+   adb shell pm grant com.anonymousfliphones.keydebounce android.permission.READ_LOGS
+   ```
+
+   Without a computer, the app offers **Grant with root** for log access instead, on first open and on the Correction log screen.
+
+Each release is signed with a new debug key, so to update, uninstall the old app first, then install and grant again:
+
+```
+adb uninstall com.anonymousfliphones.keydebounce
+adb install keydebounce-vX.apk
+adb shell pm grant com.anonymousfliphones.keydebounce android.permission.READ_LOGS
+```
+
+Builds before v1.18 used the package name `io.github.anonymousfliphones.keydebounce`; remove that one with `adb uninstall io.github.anonymousfliphones.keydebounce`. The permanent install on `/system` isn't affected by either.
 
 Each release also has a `keydebounce-daemon-vX.zip`: the daemon binary and `sepolicy/` scripts for installing by hand.
 
-## Root on the XP3800 (Root Manager)
+## Rooting with Root Manager
 
-The usual XP3800 root is Root Manager (`com.flipphoneguy.root.xp3`). Its `su` stays installed in `/system/bin`, but root doesn't survive a restart: **the first root request after each restart runs a kernel exploit**, which can crash (panic) the phone. If it works, a daemon serves every later `su` safely until the next restart. Opening the Root Manager app doesn't start root; the first `su` does.
+If you root the XP3800 with [Root Manager](https://github.com/flipphoneguy/root-sonim-xp3800) (`com.flipphoneguy.root.xp3`): its `su` stays installed in `/system/bin`, but root doesn't survive a restart: **the first root request after each restart runs a kernel exploit**, which can crash (panic) the phone. If it works, a daemon serves every later `su` safely until the next restart. Opening the Root Manager app doesn't start root; the first `su` does.
 
 - The exploit panics more often while the phone is busy, especially in the first few minutes after booting ([its author's notes](https://github.com/flipphoneguy/root-sonim-xp3800)), and more often with the permanent install's policy loaded.
 - If root hasn't started since the restart, the app's root actions say so and offer **Start root**, which runs the exploit only when you press it.
@@ -93,12 +107,12 @@ The usual XP3800 root is Root Manager (`com.flipphoneguy.root.xp3`). Its `su` st
 
 ## Root mode and Start at boot
 
-**Run with root (no install)** → **Start** runs the filter through root, with no changes to `/system` or the SELinux policy, until you press **Stop** or restart. The root has to let `su` use `/dev/input` and `/dev/uinput` (Magisk and Root Manager do); if it doesn't, the daemon exits right away and the output shows why. Running the daemon over `adb shell` without root can't work: the shell user can't open `/dev/uinput`.
+**Run with root (no install)** → **Start** runs the filter through root, with no changes to `/system` or the SELinux policy, until you press **Stop** or restart. The root has to let `su` use `/dev/input` and `/dev/uinput` (Magisk and [Root Manager](https://github.com/flipphoneguy/root-sonim-xp3800) do); if it doesn't, the daemon exits right away and the output shows why. Running the daemon over `adb shell` without root can't work: the shell user can't open `/dev/uinput`.
 
 **Boot** → **Turn on** sets **Start at boot**, which starts the filter by itself after each restart. Turning it on offers **Restart now** or **Later**. It's skipped when the permanent install is present.
 
 - **With Magisk** (root that's on at boot) it starts right after the phone finishes booting.
-- **With Root Manager** it waits until about 5 minutes after power-on, when the phone has calmed down after booting (on an XP3800 the load peaks about 2 minutes after power-on and is back near idle by about 5), then starts root and the filter. It checks every 30 seconds and calls `su` once the `su` binary has been there on two checks in a row.
+- **With [Root Manager](https://github.com/flipphoneguy/root-sonim-xp3800)** it waits until about 5 minutes after power-on, when the phone has calmed down after booting (on an XP3800 the load peaks about 2 minutes after power-on and is back near idle by about 5), then starts root and the filter. It checks every 30 seconds and calls `su` once the `su` binary has been there on two checks in a row.
 - **If starting root crashes the phone**, the next restarts ask first (**Start the keypad filter?** Start / Not now) instead of trying by themselves, until a start works. A marker file, flushed to storage 30 seconds before the `su` and deleted after it, is how the app knows.
 - If something else starts root first (for example `su` in Termux), the filter starts 30 to 60 seconds later.
 
@@ -108,14 +122,13 @@ What Start at boot did is saved in `boot-start.log`, next to the other logs. To 
 
 An accessibility service that drops the extra press when one key press registers twice (contact bounce, 5 → "55"). It doesn't fix key overlap (5,6 → "566"); that needs the daemon.
 
-Turn it on in **Settings ▸ Accessibility ▸ KeyDebounce**, then restart. (The app's Bounce filter screen has an **Accessibility** button that opens that list.)
+Turn it on in **Settings ▸ Accessibility ▸ KeyDebounce**. (The app's Bounce filter screen has an **Accessibility** button that opens that list.) On the XP3800, turning it on or off only takes effect after a restart; most phones don't need one.
 
 Or from a computer:
 
 ```
 adb shell settings put secure accessibility_enabled 1
 adb shell settings put secure enabled_accessibility_services com.anonymousfliphones.keydebounce/.BounceFilterService
-adb reboot
 ```
 
 That command **replaces** the list of accessibility services that are on. If others are on, include them too, separated by colons (`:`). See the list with `adb shell settings get secure enabled_accessibility_services`. For example, with Mouse Toggle already on:
@@ -128,20 +141,18 @@ To add it without retyping the others (PowerShell, or a Linux/Mac terminal):
 
 ```
 adb shell 'S=com.anonymousfliphones.keydebounce/.BounceFilterService; L=$(settings get secure enabled_accessibility_services); case "$L" in null|"") L=$S;; *BounceFilterService*) ;; *) L="$L:$S";; esac; settings put secure enabled_accessibility_services "$L"; settings put secure accessibility_enabled 1; settings get secure enabled_accessibility_services'
-adb reboot
 ```
 
-On this phone:
+On the XP3800:
 
-- **Restart after turning it on or off.** The change doesn't take effect until a restart.
-- **Reinstalling or updating the app removes it from the list.** Turn it on again, then restart.
+- **Restart after turning it on or off.** On the XP3800 the change doesn't take effect until a restart.
+- **Reinstalling or updating the app removes it from the list.** Turn it on again (and restart).
 - **Check it's really on:** `adb shell dumpsys accessibility | grep -A3 KeyDebounce` should show `capabilities=8`.
 
-To turn it off: Settings ▸ Accessibility ▸ KeyDebounce, then restart. Or from a computer (removes only this service from the list):
+To turn it off: Settings ▸ Accessibility ▸ KeyDebounce (and restart, on the XP3800). Or from a computer (removes only this service from the list):
 
 ```
 adb shell 'L=$(settings get secure enabled_accessibility_services | sed "s#:*com.anonymousfliphones.keydebounce/[^:]*##; s#^:##"); settings put secure enabled_accessibility_services "$L"; settings get secure enabled_accessibility_services'
-adb reboot
 ```
 
 ## Requirements
