@@ -175,15 +175,26 @@ public class BootReceiver extends BroadcastReceiver {
 
     private void run(Context app, boolean startRoot, String header) {
         PendingResult pending = goAsync();
+        BootNotifier.starting(app, startRoot);
         new Thread(() -> {
             StringBuilder out = new StringBuilder(header);
             try {
                 File dir = RootShell.unpack(app);
-                int code = RootShell.run(app, dir, RootActivity.ROOT_START, startRoot, line -> out.append(line).append('\n'));
+                StringBuilder last = new StringBuilder();
+                int code = RootShell.run(app, dir, RootActivity.ROOT_START, startRoot, line -> {
+                    out.append(line).append('\n');
+                    String t = line.trim();
+                    if (!t.isEmpty()) {
+                        last.setLength(0);
+                        last.append(t);  // the last line says why, if it failed
+                    }
+                });
                 out.append("exit ").append(code);
                 if (startRoot && code == 0) clearFlag(askFirst(app));
+                BootNotifier.result(app, code == 0, last.length() > 0 ? last.toString() : "exit " + code);
             } catch (IOException e) {
                 out.append("Couldn't unpack the app's files: ").append(e.getMessage());
+                BootNotifier.result(app, false, e.getMessage());
             } finally {
                 if (startRoot) clearMarker(app);
                 log(app, true, out.toString());

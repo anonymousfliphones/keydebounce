@@ -32,6 +32,7 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
         findViewById(R.id.undo).setOnClickListener(v -> onUndo());
         findViewById(R.id.toggle).setOnClickListener(v -> onToggle());
         findViewById(R.id.root_mode).setOnClickListener(v -> onRootMode());
+        findViewById(R.id.boot_notify).setOnClickListener(v -> onBootNotify());
         findViewById(R.id.bounce_filter).setOnClickListener(v -> onBounceFilter());
         findViewById(R.id.tester).setOnClickListener(v -> startActivity(new Intent(this, KeyTestActivity.class)));
         findViewById(R.id.log).setOnClickListener(v -> startActivity(new Intent(this, LogActivity.class)));
@@ -242,6 +243,21 @@ public class MainActivity extends Activity implements InputManager.InputDeviceLi
                     } else {
                         askRestartForBoot();
                     }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    /** The optional notification when Start at boot starts the filter. */
+    private void onBootNotify() {
+        boolean on = BootNotifier.enabled(this);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.notify_title)
+                .setMessage(getString(R.string.notify_msg, getString(on ? R.string.on_word : R.string.off_word)))
+                .setPositiveButton(on ? R.string.turn_off : R.string.turn_on, (d, w) -> {
+                    BootNotifier.setEnabled(this, !on);
+                    Toast.makeText(this, on ? R.string.notify_now_off : R.string.notify_now_on,
+                            Toast.LENGTH_LONG).show();
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();

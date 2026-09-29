@@ -97,7 +97,9 @@ jobs:
           For the **Sonim XP3800 on Android 8.1** only.
 
           ## What's new (not yet tested on a phone)
-          - **Start at boot waits until about 5 minutes after power-on** before the first `su`. Root Manager's author says the exploit panics much more often while the phone is busy, especially right after boot. Measured on an XP3800, the load peaks around 2 minutes after power-on and is back near idle by about 5. The after-crash prompt also waits until then.
+          - **Optional Start at boot notification.** The new **Boot notification** button on the main screen turns it on (off by default). When Start at boot starts the filter (with Root Manager, about 5 minutes after power-on), a silent notification says it's starting, then whether it came on or why not. Swipe it away or tap it to open the app.
+          - Run with root's **Boot...** button is now just **Boot**.
+          - **Simpler text.** Every option now just explains what it does. The "backup untested" notes are gone (Install's backup and Undo's restore have been used on a phone), and Bounce filter's Accessibility button fits on the screen.
 
           ## Files
           - `keydebounce-*.apk`: the app. Install it with `adb install`. It's signed with a debug key, so uninstall any older build first.
